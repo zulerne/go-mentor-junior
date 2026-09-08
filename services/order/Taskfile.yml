@@ -1,0 +1,72 @@
+version: "3"
+
+silent: true
+
+vars:
+  BIN_DIR: bin
+
+dotenv: [.env]
+
+tasks:
+  default:
+    desc: List available tasks
+    cmds:
+      - task --list
+
+  help:
+    desc: List available tasks
+    cmds:
+      - task --list
+
+  build:
+    desc: Build all four service binaries
+    cmds:
+      - mkdir -p {{.BIN_DIR}}
+      - go build -trimpath -o {{.BIN_DIR}}/order ./cmd/order
+
+  fmt:
+    desc: Format Go source files
+    cmds:
+      - |
+        files="$(find . -type f -name '*.go' -not -path './.git/*')"
+        if [ -n "$files" ]; then gofmt -w $files; fi
+
+  vet:
+    desc: Run Go static analysis
+    cmds:
+      - go vet ./...
+
+  golint:
+    desc: Run Go linter
+    cmds:
+      - golangci-lint run
+
+  lint:
+    desc: Run Go static analysis and linter
+    cmds:
+      - task: fmt
+      - task: vet
+      - task: golint
+
+  test:
+    desc: Run the test suite
+    cmds:
+      - go test ./...
+
+  test-race:
+    desc: Run the test suite with the race detector
+    cmds:
+      - go test -race ./...
+
+  run:
+    desc: Build and run all four process skeletons
+    cmds:
+      - task: build
+      - task: run-order
+
+  run-order:
+    # env:
+    #   ENV: local
+    #   HTTP_ADDRESS: :8080
+    cmds:
+      - ./{{.BIN_DIR}}/order
