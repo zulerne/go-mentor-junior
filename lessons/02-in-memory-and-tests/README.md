@@ -8,6 +8,10 @@ The required behavior is defined by the [project specification](../../docs/proje
 
 Each student completes the common tasks and one assigned service track.
 
+## Support material
+
+[Testing service boundaries](topics/01-testing-service-boundaries.md) provides optional guidance and references for the testing techniques used in this lesson.
+
 ## What you will practice
 
 - turning business rules into observable test cases;
