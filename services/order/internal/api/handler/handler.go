@@ -19,10 +19,11 @@ type Handler struct {
 }
 
 func New(storage Storage, log *slog.Logger) http.Handler {
+	log = log.With("component", "handler")
 	h := &Handler{
 		storage:   storage,
 		validator: validator.New(),
-		log:       log.With("component", "handler"),
+		log:       log,
 	}
 
 	customerIDMiddleware := middleware.CustomerID(log)

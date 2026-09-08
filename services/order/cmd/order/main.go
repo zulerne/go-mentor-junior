@@ -17,8 +17,6 @@ func main() {
 
 	log := logger.New(cfg.Env)
 
-	log.Info("config initialized", "config", cfg)
-
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
