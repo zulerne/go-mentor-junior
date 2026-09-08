@@ -26,7 +26,7 @@ func main() {
 
 	srv := &http.Server{
 		Addr:         "localhost:8080",
-		Handler:      handler.New(storage),
+		Handler:      handler.New(storage, log),
 		WriteTimeout: cfg.HTTPConfig.Timeout,
 		ReadTimeout:  cfg.HTTPConfig.Timeout,
 		IdleTimeout:  cfg.HTTPConfig.IdleTimeout,
