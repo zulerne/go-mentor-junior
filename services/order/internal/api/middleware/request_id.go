@@ -15,7 +15,7 @@ const (
 	// RequestIDKey is the context key for request ID
 	RequestIDKey contextKey = "request_id"
 	// RequestIDHeader is the header name for request ID
-	RequestIDHeader = "X-Request-ID"
+	requestIDHeader = "X-Request-ID"
 )
 
 var reqid atomic.Uint64
@@ -29,14 +29,14 @@ func RequestID(log *slog.Logger) Middleware {
 		slog.Debug("RequestID middleware enabled")
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
-			requestID := r.Header.Get(RequestIDHeader)
+			requestID := r.Header.Get(requestIDHeader)
 			if requestID == "" {
 				myid := reqid.Add(1)
 				requestID = fmt.Sprintf("%016x", myid)
 			}
 
 			// Set the request ID in response header
-			w.Header().Set(RequestIDHeader, requestID)
+			w.Header().Set(requestIDHeader, requestID)
 
 			ctx = context.WithValue(ctx, RequestIDKey, requestID)
 			next.ServeHTTP(w, r.WithContext(ctx))

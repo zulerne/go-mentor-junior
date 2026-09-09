@@ -20,11 +20,9 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
-	var storage handler.Storage = nil
-
 	srv := &http.Server{
 		Addr:         "localhost:8080",
-		Handler:      handler.New(storage, log),
+		Handler:      handler.New(log),
 		WriteTimeout: cfg.HTTPConfig.Timeout,
 		ReadTimeout:  cfg.HTTPConfig.Timeout,
 		IdleTimeout:  cfg.HTTPConfig.IdleTimeout,
