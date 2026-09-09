@@ -12,6 +12,12 @@ import (
 	"github.com/zulerne/go-mentor-junior/order/internal/logger"
 )
 
+// TODO (review): Global questions:
+// 1. Should we use global logger? Or pass it everywhere(like now)?
+// 2. Is project structure correct?
+// 3. Is it okay that I splitted service into two separate services (customer and restaurant)?
+// 4. What to use: internal/services/customer and internal/services/restaurant or just internal/customer and internal/restaurant?
+
 func main() {
 	cfg := config.MustLoad()
 

@@ -6,6 +6,8 @@ import (
 	"net/http"
 )
 
+// TODO (review): Do I need these middleware(customer/restaurant ids) or should I extract them manually from the request?
+
 const (
 	CustomerIDKey    = "customer_id"
 	customerIDHeader = "X-Customer-ID"

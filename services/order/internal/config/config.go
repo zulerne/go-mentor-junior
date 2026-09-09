@@ -19,6 +19,8 @@ const (
 	defaultShutdownTimeout = 10 * time.Second
 )
 
+// TODO (review): Is it okay to use validatorv10 for config validation? or is it better to use other libs or manually?
+
 type Config struct {
 	Env        string     `validate:"required,oneof=local production"`
 	HTTPConfig HTTPConfig `validate:"omitempty"`

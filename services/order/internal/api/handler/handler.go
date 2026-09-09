@@ -56,6 +56,8 @@ func New(log *slog.Logger) http.Handler {
 	)
 }
 
+// TODO (review): Is it okay to have helper functions like these below?
+
 func (h *Handler) respond(w http.ResponseWriter, status int, v any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)

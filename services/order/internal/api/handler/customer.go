@@ -1,5 +1,6 @@
 package handler
 
+// TODO (review): is it okay that I splitted the code into customer/restaurant files?
 import (
 	"encoding/json"
 	"errors"

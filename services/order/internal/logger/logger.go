@@ -7,6 +7,7 @@ import (
 	"github.com/zulerne/go-mentor-junior/order/internal/config"
 )
 
+// TODO (review): Do I need this small package? Or Its better to init it in main.go?
 func New(env string) *slog.Logger {
 	var log *slog.Logger
 
