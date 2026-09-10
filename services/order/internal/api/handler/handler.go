@@ -7,7 +7,6 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/zulerne/go-mentor-junior/order/internal/api/middleware"
-	"github.com/zulerne/go-mentor-junior/order/internal/api/response"
 	"github.com/zulerne/go-mentor-junior/order/internal/services/customer"
 	"github.com/zulerne/go-mentor-junior/order/internal/services/restaurant"
 )
@@ -63,22 +62,8 @@ func (h *Handler) respond(w http.ResponseWriter, status int, v any) {
 	w.WriteHeader(status)
 
 	if err := json.NewEncoder(w).Encode(v); err != nil {
-		slog.Error("failed to encode response", "error", err)
+		h.log.Error("failed to encode response", "error", err)
 	}
-}
-
-func (h *Handler) error(w http.ResponseWriter, status int, code string, message string, details any) {
-	h.respond(w, status, response.Error{
-		ErrorData: response.ErrorData{
-			Code:    code,
-			Message: message,
-			Details: details,
-		},
-	})
-}
-
-func (h *Handler) baseError(w http.ResponseWriter, status int, err string) {
-	h.error(w, status, "INTERNAL_ERROR", err, nil)
 }
 
 func (h *Handler) healthz(w http.ResponseWriter, r *http.Request) {

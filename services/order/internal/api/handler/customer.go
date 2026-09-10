@@ -51,7 +51,7 @@ func (h *Handler) addItemToCart(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		msg := "failed to decode request"
 		log.Error(msg, "error", err)
-		h.baseError(w, http.StatusBadRequest, msg)
+		h.respond(w, http.StatusBadRequest, response.NewBaseError(msg, err))
 		return
 	}
 
@@ -63,11 +63,11 @@ func (h *Handler) addItemToCart(w http.ResponseWriter, r *http.Request) {
 
 		var validationErr validator.ValidationErrors
 		if !errors.As(err, &validationErr) {
-			h.baseError(w, http.StatusInternalServerError, "internal error")
+			h.respond(w, http.StatusInternalServerError, response.NewBaseError(msg, err))
 			return
 		}
 
-		h.respond(w, http.StatusBadRequest, response.ValidationError(validationErr))
+		h.respond(w, http.StatusBadRequest, response.NewValidationError(validationErr))
 		return
 	}
 
