@@ -11,6 +11,11 @@ import (
 	"github.com/zulerne/go-mentor-junior/order/internal/services/restaurant"
 )
 
+const (
+	menuItemIDKey = "menu_item_id"
+	orderIDKey    = "order_id"
+)
+
 // Handler holds all dependencies for HTTP handlers
 type Handler struct {
 	customer   *customer.Service
