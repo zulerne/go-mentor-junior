@@ -1,10 +1,10 @@
 package domain
 
 type MenuItem struct {
-	id          string
-	name        string
-	description string
-	priceMinor  int64
-	currency    string
-	available   bool
+	Id          string
+	Name        string
+	Description string
+	PriceMinor  int64
+	Currency    string
+	Available   bool
 }

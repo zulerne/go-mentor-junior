@@ -1,9 +1,9 @@
 package domain
 
 type Restaurant struct {
-	id                string
-	name              string
-	acceptingOrders   bool
-	minimumOrderMinor int64
-	currency          string
+	ID                string
+	Name              string
+	AcceptingOrders   bool
+	MinimumOrderMinor int64
+	Currency          string
 }

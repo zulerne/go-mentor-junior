@@ -1,20 +1,32 @@
 package customer
 
-import "log/slog"
+import (
+	"context"
+	"log/slog"
 
-type Store interface {
+	"github.com/zulerne/go-mentor-junior/order/internal/domain"
+)
+
+type OrderStore interface {
+	Find(ctx context.Context, id string) (domain.Order, error)
+}
+
+type RestaurantProveder interface {
+	Find(ctx context.Context, menuItemId string) (domain.MenuItem, error)
 }
 
 type Service struct {
-	store Store
-	log   *slog.Logger
+	store              OrderStore
+	restaurantProvider RestaurantProveder
+	log                *slog.Logger
 }
 
-func New(store Store, log *slog.Logger) *Service {
+func New(store OrderStore, restaurantProvider RestaurantProveder, log *slog.Logger) *Service {
 	log = log.With("component", "customer")
 	c := &Service{
-		store: store,
-		log:   log,
+		store:              store,
+		restaurantProvider: restaurantProvider,
+		log:                log,
 	}
 
 	return c

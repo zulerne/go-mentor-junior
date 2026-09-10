@@ -1,17 +1,17 @@
 package domain
 
 type CartItem struct {
-	menuItemID     string
-	name           string
-	unitPriceMinor int64
-	currency       string
-	quantity       int32
-	instructions   string
+	MenuItemID     string
+	Name           string
+	UnitPriceMinor int64
+	Currency       string
+	Quantity       int32
+	Instructions   string
 }
 
 type Cart struct {
-	restaurantID  *string
-	items         []CartItem
-	subtotalMinor int64
-	currency      *string
+	RestaurantID  *string
+	Items         []CartItem
+	SubtotalMinor int64
+	Currency      *string
 }

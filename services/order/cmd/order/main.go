@@ -10,6 +10,11 @@ import (
 	"github.com/zulerne/go-mentor-junior/order/internal/api/handler"
 	"github.com/zulerne/go-mentor-junior/order/internal/config"
 	"github.com/zulerne/go-mentor-junior/order/internal/logger"
+	deliveryProveder "github.com/zulerne/go-mentor-junior/order/internal/provider/delivery/memory"
+	restaurantProvider "github.com/zulerne/go-mentor-junior/order/internal/provider/restaurant/memory"
+	orderStore "github.com/zulerne/go-mentor-junior/order/internal/provider/store/memory"
+	"github.com/zulerne/go-mentor-junior/order/internal/services/customer"
+	"github.com/zulerne/go-mentor-junior/order/internal/services/restaurant"
 )
 
 // TODO (review): Global questions:
@@ -26,9 +31,14 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
+	orderStore := orderStore.NewOrderStore()
+
+	customer := customer.New(orderStore, restaurantProvider.NewRestaurant(), log)
+	restaurant := restaurant.New(orderStore, deliveryProveder.NewDelivery(), log)
+
 	srv := &http.Server{
 		Addr:         "localhost:8080",
-		Handler:      handler.New(log),
+		Handler:      handler.New(customer, restaurant, log),
 		WriteTimeout: cfg.HTTPConfig.Timeout,
 		ReadTimeout:  cfg.HTTPConfig.Timeout,
 		IdleTimeout:  cfg.HTTPConfig.IdleTimeout,

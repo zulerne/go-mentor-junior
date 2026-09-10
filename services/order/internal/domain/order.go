@@ -21,24 +21,24 @@ const (
 )
 
 type OrderItem struct {
-	menuItemID     string
-	name           string
-	unitPriceMinor int64
-	quantity       int32
-	instructions   string
+	MenuItemId     string
+	Name           string
+	UnitPriceMinor int64
+	Quantity       int32
+	Instructions   string
 }
 
 type Order struct {
-	id              string
-	customerID      string
-	restaurantID    string
-	status          OrderStatus
-	items           []OrderItem
-	subtotalMinor   int64
-	currency        string
-	deliveryAddress string
-	rejectionReason *string
-	deliveryStatus  *OrderDeliveryStatus
-	createdAt       time.Time
-	updatedAt       time.Time
+	ID              string
+	CustomerID      string
+	RestaurantID    string
+	Status          OrderStatus
+	Items           []OrderItem
+	SubtotalMinor   int64
+	Currency        string
+	DeliveryAddress string
+	RejectionReason *string
+	DeliveryStatus  *OrderDeliveryStatus
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
 }
