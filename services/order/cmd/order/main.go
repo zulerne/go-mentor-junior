@@ -12,7 +12,7 @@ import (
 	"github.com/zulerne/go-mentor-junior/order/internal/logger"
 	deliveryProveder "github.com/zulerne/go-mentor-junior/order/internal/provider/delivery/memory"
 	restaurantProvider "github.com/zulerne/go-mentor-junior/order/internal/provider/restaurant/memory"
-	orderStore "github.com/zulerne/go-mentor-junior/order/internal/provider/store/memory"
+	store "github.com/zulerne/go-mentor-junior/order/internal/provider/store/memory"
 	"github.com/zulerne/go-mentor-junior/order/internal/services/customer"
 	"github.com/zulerne/go-mentor-junior/order/internal/services/restaurant"
 )
@@ -31,9 +31,9 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
-	orderStore := orderStore.NewOrderStore()
+	orderStore := store.NewOrderStore()
 
-	customer := customer.New(orderStore, restaurantProvider.NewRestaurantProvider(), log)
+	customer := customer.New(orderStore, store.NewCartStore(), restaurantProvider.NewRestaurantProvider(), log)
 	restaurant := restaurant.New(orderStore, deliveryProveder.NewDeliveryProvider(), log)
 
 	srv := &http.Server{

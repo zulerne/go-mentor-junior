@@ -4,6 +4,7 @@ package handler
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/go-playground/validator/v10"
@@ -20,22 +21,24 @@ func (h *Handler) getCart(w http.ResponseWriter, r *http.Request) {
 	)
 
 	log.Info("getting cart")
+	fmt.Printf("h.Customer: %v\n", h.Customer)
 
-	// cart, err := h.orderService.GetCart(r.Context())
-	// if err != nil {
-	// 	log.Error("failed to get cart", "error", err)
-	// 	http.Error(w, err.Error(), http.StatusInternalServerError)
-	// 	return
-	// }
+	cart, err := h.Customer.CartStore.FindCart(
+		r.Context(),
+		middleware.GetCustomerID(r.Context()),
+	)
+	if err != nil {
+		log.Error("failed to get cart", "error", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
-	h.respond(w, http.StatusOK, response.Cart{
-		Items: []response.CardItem{},
-	})
+	h.respond(w, http.StatusOK, cart)
 }
 
 type addItemToCartRequest struct {
 	RestaurantID string `json:"restaurant_id" validate:"required"`
-	ItemID       string `json:"item_id" validate:"required"`
+	Quantity     int    `json:"quantity" validate:"required"`
 	Instructions string `json:"instructions" validate:"required"`
 }
 

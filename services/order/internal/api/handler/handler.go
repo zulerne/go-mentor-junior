@@ -18,8 +18,8 @@ const (
 
 // Handler holds all dependencies for HTTP handlers
 type Handler struct {
-	customer   *customer.Service
-	restaurant *restaurant.Service
+	Customer   *customer.Service
+	Restaurant *restaurant.Service
 	validator  *validator.Validate
 	log        *slog.Logger
 }
@@ -27,8 +27,10 @@ type Handler struct {
 func New(cust *customer.Service, rest *restaurant.Service, log *slog.Logger) http.Handler {
 	log = log.With("component", "handler")
 	h := &Handler{
-		validator: validator.New(),
-		log:       log,
+		Customer:   cust,
+		Restaurant: rest,
+		validator:  validator.New(),
+		log:        log,
 	}
 
 	mux := http.NewServeMux()

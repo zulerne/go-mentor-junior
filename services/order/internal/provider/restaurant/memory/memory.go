@@ -7,21 +7,27 @@ import (
 )
 
 type RestaurantProvider struct {
-	MenuItems []domain.MenuItem
+	// restaurant_id -> menu_item_id
+	data map[string]map[string]domain.MenuItem
 }
 
 func NewRestaurantProvider() *RestaurantProvider {
-	menuItems := []domain.MenuItem{}
-	menuItems = append(menuItems, domain.MenuItem{Id: "menu-item-1", Name: "Lasagna", Description: "Delicious lasagna pasta", PriceMinor: 100, Currency: "USD", Available: true})
-	menuItems = append(menuItems, domain.MenuItem{Id: "menu-item-2", Name: "Spaghetti", Description: "Delicious spaghetti pasta", PriceMinor: 80, Currency: "USD", Available: true})
-	return &RestaurantProvider{MenuItems: menuItems}
+	menuItems := map[string]map[string]domain.MenuItem{}
+	menuItems["restaurant-1"] = map[string]domain.MenuItem{
+		"menu-item-1": {Id: "menu-item-1", Name: "Lasagna", Description: "Delicious lasagna pasta", PriceMinor: 100, Currency: "USD", Available: true},
+		"menu-item-2": {Id: "menu-item-2", Name: "Spaghetti", Description: "Delicious spaghetti pasta", PriceMinor: 80, Currency: "USD", Available: true},
+	}
+	return &RestaurantProvider{data: menuItems}
 }
 
-func (r *RestaurantProvider) Find(ctx context.Context, menuItemId string) (domain.MenuItem, error) {
-	for _, item := range r.MenuItems {
-		if item.Id == menuItemId {
-			return item, nil
-		}
+func (r *RestaurantProvider) Find(ctx context.Context, restaurantId, menuItemId string) (domain.MenuItem, error) {
+	items, ok := r.data[restaurantId]
+	if !ok {
+		return domain.MenuItem{}, nil
 	}
-	return domain.MenuItem{}, nil
+	item, ok := items[menuItemId]
+	if !ok {
+		return domain.MenuItem{}, nil
+	}
+	return item, nil
 }
