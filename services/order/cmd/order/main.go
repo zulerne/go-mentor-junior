@@ -33,8 +33,8 @@ func main() {
 
 	orderStore := orderStore.NewOrderStore()
 
-	customer := customer.New(orderStore, restaurantProvider.NewRestaurant(), log)
-	restaurant := restaurant.New(orderStore, deliveryProveder.NewDelivery(), log)
+	customer := customer.New(orderStore, restaurantProvider.NewRestaurantProvider(), log)
+	restaurant := restaurant.New(orderStore, deliveryProveder.NewDeliveryProvider(), log)
 
 	srv := &http.Server{
 		Addr:         "localhost:8080",

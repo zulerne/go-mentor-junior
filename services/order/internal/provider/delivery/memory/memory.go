@@ -5,19 +5,19 @@ import (
 	"time"
 )
 
-type Delivery struct {
+type DeliveryProvider struct {
 }
 
-func NewDelivery() *Delivery {
-	return &Delivery{}
+func NewDeliveryProvider() *DeliveryProvider {
+	return &DeliveryProvider{}
 }
 
-func (d *Delivery) Create(ctx context.Context, order_id string) error {
+func (d *DeliveryProvider) Create(ctx context.Context, order_id string) error {
 	time.Sleep(1 * time.Second)
 	return nil
 }
 
-func (d *Delivery) Start(ctx context.Context, order_id string) error {
+func (d *DeliveryProvider) Start(ctx context.Context, order_id string) error {
 	time.Sleep(1 * time.Second)
 	return nil
 }
