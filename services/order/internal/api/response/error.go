@@ -55,11 +55,16 @@ func NewError(code ErrorCode, message string, details ...string) Error {
 }
 
 func NewBaseError(msg string, err error) Error {
+	var details string
+	if err != nil {
+		details = err.Error()
+	}
+
 	return Error{
 		ErrorData: ErrorData{
 			Code:    BaseErrorCode,
 			Message: msg,
-			Details: []string{err.Error()},
+			Details: details,
 		},
 	}
 }
