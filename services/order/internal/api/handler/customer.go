@@ -14,22 +14,23 @@ import (
 
 func (h *Handler) getCart(w http.ResponseWriter, r *http.Request) {
 	op := "handler.getCart"
+	customerID := middleware.GetCustomerID(r.Context())
 	log := h.log.With(
 		"op", op,
 		string(middleware.RequestIDKey), middleware.GetRequestID(r.Context()),
-		string(middleware.CustomerIDKey), middleware.GetCustomerID(r.Context()),
+		string(middleware.CustomerIDKey), customerID,
 	)
 
 	log.Info("getting cart")
-	fmt.Printf("h.Customer: %v\n", h.Customer)
+	fmt.Printf("h.Customer: %v\n", h.customer)
 
-	cart, err := h.Customer.GetCart(
+	cart, err := h.customer.GetCart(
 		r.Context(),
-		middleware.GetCustomerID(r.Context()),
+		customerID,
 	)
 	if err != nil {
 		log.Error("failed to get cart", "error", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		h.respond(w, http.StatusInternalServerError, nil)
 		return
 	}
 

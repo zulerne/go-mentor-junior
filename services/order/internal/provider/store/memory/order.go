@@ -17,7 +17,7 @@ func NewOrderStore() *OrderStore {
 	data["test"] = domain.Order{
 		ID:              "test",
 		CustomerID:      "",
-		RestaurantID:    "",
+		RestaurantID:    "1",
 		Status:          domain.Pending,
 		Items:           nil,
 		SubtotalMinor:   0,
@@ -39,4 +39,14 @@ func (s *OrderStore) Find(ctx context.Context, id string) (domain.Order, error) 
 		return domain.Order{}, nil
 	}
 	return order, nil
+}
+
+func (s *OrderStore) FindByRestaurant(ctx context.Context, restaurantID string) ([]domain.Order, error) {
+	var orders []domain.Order
+	for _, order := range s.data {
+		if order.RestaurantID == restaurantID {
+			orders = append(orders, order)
+		}
+	}
+	return orders, nil
 }

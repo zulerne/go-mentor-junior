@@ -21,18 +21,18 @@ type RestaurantProveder interface {
 }
 
 type Service struct {
-	OrderStore         OrderStore
-	CartStore          CartStore
-	RestaurantProvider RestaurantProveder
+	orderStore         OrderStore
+	cartStore          CartStore
+	restaurantProvider RestaurantProveder
 	log                *slog.Logger
 }
 
 func New(orderStore OrderStore, cartStore CartStore, restaurantProvider RestaurantProveder, log *slog.Logger) *Service {
 	log = log.With("component", "customer")
 	c := &Service{
-		OrderStore:         orderStore,
-		CartStore:          cartStore,
-		RestaurantProvider: restaurantProvider,
+		orderStore:         orderStore,
+		cartStore:          cartStore,
+		restaurantProvider: restaurantProvider,
 		log:                log,
 	}
 
@@ -40,7 +40,7 @@ func New(orderStore OrderStore, cartStore CartStore, restaurantProvider Restaura
 }
 
 func (c *Service) GetCart(ctx context.Context, customerId string) (domain.Cart, error) {
-	cart, err := c.CartStore.FindCart(ctx, customerId)
+	cart, err := c.cartStore.FindCart(ctx, customerId)
 	if err != nil {
 		return domain.Cart{}, err
 	}

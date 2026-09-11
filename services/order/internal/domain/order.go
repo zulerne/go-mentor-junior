@@ -2,22 +2,22 @@ package domain
 
 import "time"
 
-type OrderStatus int
+type OrderStatus string
 
 const (
-	Pending OrderStatus = iota
-	Accepted
-	Preparing
-	ReadyForPickup
-	Rejected
-	Cancelled
+	Pending        OrderStatus = "PENDING"
+	Accepted       OrderStatus = "ACCEPTED"
+	Preparing      OrderStatus = "PREPARING"
+	ReadyForPickup OrderStatus = "READY_FOR_PICKUP"
+	Rejected       OrderStatus = "REJECTED"
+	Cancelled      OrderStatus = "CANCELLED"
 )
 
-type OrderDeliveryStatus int
+type OrderDeliveryStatus string
 
 const (
-	WaitingForPreparation OrderDeliveryStatus = iota
-	InDelivery
+	WaitingForPreparation OrderDeliveryStatus = "WAITING_FOR_PREPARATION"
+	InDelivery            OrderDeliveryStatus = "IN_DELIVERY"
 )
 
 type OrderItem struct {

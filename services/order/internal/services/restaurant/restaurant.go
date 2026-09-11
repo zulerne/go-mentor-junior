@@ -9,6 +9,7 @@ import (
 
 type OrderStore interface {
 	Find(ctx context.Context, id string) (domain.Order, error)
+	FindByRestaurant(ctx context.Context, restaurantID string) ([]domain.Order, error)
 }
 
 type DeliveryProvider interface {
@@ -30,4 +31,12 @@ func New(store OrderStore, deliveryProvider DeliveryProvider, log *slog.Logger) 
 		log:              log,
 	}
 	return r
+}
+
+func (r *Service) GetOrders(ctx context.Context, restaurantID string) ([]domain.Order, error) {
+	orders, err := r.store.FindByRestaurant(ctx, restaurantID)
+	if err != nil {
+		return nil, err
+	}
+	return orders, nil
 }

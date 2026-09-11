@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/zulerne/go-mentor-junior/order/internal/api/middleware"
@@ -12,16 +13,44 @@ import (
 
 func (h *Handler) getRestaurantOrders(w http.ResponseWriter, r *http.Request) {
 	op := "handler.getRestaurantOrders"
+	restaurantID := middleware.GetRestaurantID(r.Context())
 	log := h.log.With(
 		"op", op,
 		string(middleware.RequestIDKey), middleware.GetRequestID(r.Context()),
-		string(middleware.CustomerIDKey), middleware.GetCustomerID(r.Context()),
+		string(middleware.RestaurantIDKey), restaurantID,
 	)
 
 	log.Debug("request received")
 
+	orders, err := h.restaurant.GetOrders(r.Context(), restaurantID)
+	if err != nil {
+		h.respond(w, http.StatusInternalServerError, nil)
+		return
+	}
+
+	orderResponses := make([]response.Order, 0, len(orders))
+	for _, order := range orders {
+		deliveryStatus := ""
+		if order.DeliveryStatus != nil {
+			deliveryStatus = string(*order.DeliveryStatus)
+		}
+		orderResponses = append(orderResponses, response.Order{
+			ID:              order.ID,
+			CustomerID:      order.CustomerID,
+			Status:          string(order.Status),
+			SubtotalMinor:   order.SubtotalMinor,
+			Currency:        order.Currency,
+			DeliveryAddress: order.DeliveryAddress,
+			RejectionReason: order.RejectionReason,
+			DeliveryStatus:  &deliveryStatus,
+			CreatedAt:       order.CreatedAt.Format(time.RFC3339),
+			UpdatedAt:       order.UpdatedAt.Format(time.RFC3339),
+			Items:           []response.OrderItem{},
+		})
+	}
+
 	h.respond(w, http.StatusOK, response.AllOrders{
-		Orders: []response.Order{},
+		Orders: orderResponses,
 	})
 }
 
@@ -30,7 +59,7 @@ func (h *Handler) acceptRestaurantOrder(w http.ResponseWriter, r *http.Request) 
 	log := h.log.With(
 		"op", op,
 		string(middleware.RequestIDKey), middleware.GetRequestID(r.Context()),
-		string(middleware.CustomerIDKey), middleware.GetCustomerID(r.Context()),
+		string(middleware.RestaurantIDKey), middleware.GetRestaurantID(r.Context()),
 	)
 
 	orderID := r.PathValue(orderIDKey)
@@ -56,7 +85,7 @@ func (h *Handler) rejectRestaurantOrder(w http.ResponseWriter, r *http.Request) 
 	log := h.log.With(
 		"op", op,
 		string(middleware.RequestIDKey), middleware.GetRequestID(r.Context()),
-		string(middleware.CustomerIDKey), middleware.GetCustomerID(r.Context()),
+		string(middleware.RestaurantIDKey), middleware.GetRestaurantID(r.Context()),
 	)
 
 	var req rejectRestaurantOrderRequest
@@ -93,7 +122,7 @@ func (h *Handler) prepareRestaurantOrder(w http.ResponseWriter, r *http.Request)
 	log := h.log.With(
 		"op", op,
 		string(middleware.RequestIDKey), middleware.GetRequestID(r.Context()),
-		string(middleware.CustomerIDKey), middleware.GetCustomerID(r.Context()),
+		string(middleware.RestaurantIDKey), middleware.GetRestaurantID(r.Context()),
 	)
 
 	orderID := r.PathValue(orderIDKey)
@@ -115,7 +144,7 @@ func (h *Handler) readyRestaurantOrder(w http.ResponseWriter, r *http.Request) {
 	log := h.log.With(
 		"op", op,
 		string(middleware.RequestIDKey), middleware.GetRequestID(r.Context()),
-		string(middleware.CustomerIDKey), middleware.GetCustomerID(r.Context()),
+		string(middleware.RestaurantIDKey), middleware.GetRestaurantID(r.Context()),
 	)
 
 	orderID := r.PathValue(orderIDKey)
