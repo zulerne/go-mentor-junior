@@ -23,7 +23,7 @@ func (h *Handler) getCart(w http.ResponseWriter, r *http.Request) {
 	log.Info("getting cart")
 	fmt.Printf("h.Customer: %v\n", h.Customer)
 
-	cart, err := h.Customer.CartStore.FindCart(
+	cart, err := h.Customer.GetCart(
 		r.Context(),
 		middleware.GetCustomerID(r.Context()),
 	)
@@ -33,7 +33,24 @@ func (h *Handler) getCart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.respond(w, http.StatusOK, cart)
+	cartItems := make([]response.CardItem, 0, len(cart.Items))
+	for _, item := range cart.Items {
+		cartItems = append(cartItems, response.CardItem{
+			MenuItemID:     item.MenuItemID,
+			Name:           item.Name,
+			UnitPriceMinor: item.UnitPriceMinor,
+			Currency:       item.Currency,
+			Quantity:       item.Quantity,
+			Instructions:   item.Instructions,
+		})
+	}
+
+	h.respond(w, http.StatusOK, response.Cart{
+		RestaurantID:  cart.RestaurantID,
+		Items:         cartItems,
+		SubtotalMinor: cart.SubtotalMinor,
+		Currency:      cart.Currency,
+	})
 }
 
 type addItemToCartRequest struct {
