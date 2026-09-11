@@ -34,8 +34,8 @@ func New(cust *customer.Service, rest *restaurant.Service, log *slog.Logger) htt
 	}
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("GET /healthz", h.healthz)
 	mux.HandleFunc("GET /livez", h.livez)
+	mux.HandleFunc("GET /readyz", h.readyz)
 
 	customerIDMiddleware := middleware.CustomerID(log)
 
@@ -68,17 +68,19 @@ func (h *Handler) respond(w http.ResponseWriter, status int, v any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 
+	if v == nil {
+		return
+	}
+
 	if err := json.NewEncoder(w).Encode(v); err != nil {
 		h.log.Error("failed to encode response", "error", err)
 	}
 }
 
-func (h *Handler) healthz(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(""))
+func (h *Handler) livez(w http.ResponseWriter, r *http.Request) {
+	h.respond(w, http.StatusOK, nil)
 }
 
-func (h *Handler) livez(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(""))
+func (h *Handler) readyz(w http.ResponseWriter, r *http.Request) {
+	h.respond(w, http.StatusOK, nil)
 }
