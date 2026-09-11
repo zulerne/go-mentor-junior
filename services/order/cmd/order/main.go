@@ -37,7 +37,7 @@ func main() {
 	restaurant := restaurant.New(orderStore, deliveryProveder.NewDeliveryProvider(), log)
 
 	srv := &http.Server{
-		Addr:         "localhost:8080",
+		Addr:         cfg.HTTPConfig.Address,
 		Handler:      handler.New(customer, restaurant, log),
 		WriteTimeout: cfg.HTTPConfig.Timeout,
 		ReadTimeout:  cfg.HTTPConfig.Timeout,
@@ -46,6 +46,8 @@ func main() {
 
 	errCh := make(chan error, 1)
 	go func() {
+		log.Info("starting server", "address", srv.Addr)
+
 		if err := srv.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
 			errCh <- err
 			return
@@ -53,20 +55,24 @@ func main() {
 		errCh <- nil
 	}()
 
-	log.Info("server started", "address", srv.Addr)
-	<-ctx.Done()
+	select {
+	case err := <-errCh:
+		if err != nil {
+			log.Error("server error", "error", err)
+		}
+	case <-ctx.Done():
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), cfg.HTTPConfig.ShutdownTimeout)
+		defer cancel()
 
-	shutdownCtx, cancel := context.WithTimeout(context.Background(), cfg.HTTPConfig.ShutdownTimeout)
-	defer cancel()
+		if err := srv.Shutdown(shutdownCtx); err != nil {
+			log.Error("failed to shutdown server gracefully", "error", err)
+			srv.Close()
+		} else {
+			log.Info("server stopped gracefully")
+		}
 
-	if err := srv.Shutdown(shutdownCtx); err != nil {
-		log.Error("failed to shutdown server gracefully", "error", err)
-		srv.Close()
+		if err := <-errCh; err != nil {
+			log.Error("server error", "error", err)
+		}
 	}
-
-	if err := <-errCh; err != nil {
-		log.Error("server error", "error", err)
-	}
-
-	log.Info("server stopped gracefully")
 }
