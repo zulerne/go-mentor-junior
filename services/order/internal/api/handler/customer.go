@@ -4,7 +4,6 @@ package handler
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 
 	"github.com/go-playground/validator/v10"
@@ -21,15 +20,14 @@ func (h *Handler) getCart(w http.ResponseWriter, r *http.Request) {
 		string(middleware.CustomerIDKey), customerID,
 	)
 
-	log.Info("getting cart")
-	fmt.Printf("h.Customer: %v\n", h.customer)
+	log.InfoContext(r.Context(), "getting cart")
 
 	cart, err := h.customer.GetCart(
 		r.Context(),
 		customerID,
 	)
 	if err != nil {
-		log.Error("failed to get cart", "error", err)
+		log.ErrorContext(r.Context(), "failed to get cart", "error", err)
 		h.respond(w, http.StatusInternalServerError, nil)
 		return
 	}
@@ -56,8 +54,8 @@ func (h *Handler) getCart(w http.ResponseWriter, r *http.Request) {
 
 type addItemToCartRequest struct {
 	RestaurantID string `json:"restaurant_id" validate:"required"`
-	Quantity     int    `json:"quantity" validate:"required"`
-	Instructions string `json:"instructions" validate:"required"`
+	Quantity     int    `json:"quantity"      validate:"required"`
+	Instructions string `json:"instructions"  validate:"required"`
 }
 
 func (h *Handler) addItemToCart(w http.ResponseWriter, r *http.Request) {
@@ -71,25 +69,25 @@ func (h *Handler) addItemToCart(w http.ResponseWriter, r *http.Request) {
 	menuItemID := r.PathValue(menuItemIDKey)
 	if menuItemID == "" {
 		msg := "menu item id is required"
-		log.Error(msg, "error", menuItemID)
+		log.ErrorContext(r.Context(), msg, "error", menuItemID)
 		h.respond(w, http.StatusBadRequest, response.NewBaseError(msg, nil))
 		return
 	}
-	log.Debug("menu item id parsed", "menu_item_id", menuItemID)
+	log.DebugContext(r.Context(), "menu item id parsed", "menu_item_id", menuItemID)
 
 	var req addItemToCartRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		msg := "failed to decode request"
-		log.Error(msg, "error", err)
+		log.ErrorContext(r.Context(), msg, "error", err)
 		h.respond(w, http.StatusBadRequest, response.NewBaseError(msg, err))
 		return
 	}
 
-	log.Info("request received")
+	log.InfoContext(r.Context(), "request received")
 
 	if err := h.validator.Struct(req); err != nil {
-		msg := "validation error"
-		log.Error(msg, "error", err)
+		msg := response.ValidationErrorCode
+		log.ErrorContext(r.Context(), msg, "error", err)
 
 		var validationErr validator.ValidationErrors
 		if !errors.As(err, &validationErr) {
@@ -125,11 +123,11 @@ func (h *Handler) removeItemFromCart(w http.ResponseWriter, r *http.Request) {
 	menuItemID := r.PathValue(menuItemIDKey)
 	if menuItemID == "" {
 		msg := "menu item id is required"
-		log.Error(msg, "error", menuItemID)
+		log.ErrorContext(r.Context(), msg, "error", menuItemID)
 		h.respond(w, http.StatusBadRequest, response.NewBaseError(msg, nil))
 		return
 	}
-	log.Debug("menu item id parsed", "menu_item_id", menuItemID)
+	log.DebugContext(r.Context(), "menu item id parsed", "menu_item_id", menuItemID)
 
 	h.respond(w, http.StatusNoContent, nil)
 }
@@ -149,16 +147,16 @@ func (h *Handler) createOrder(w http.ResponseWriter, r *http.Request) {
 	var req createOrderRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		msg := "failed to decode request body"
-		log.Error(msg, "error", err)
+		log.ErrorContext(r.Context(), msg, "error", err)
 		h.respond(w, http.StatusBadRequest, response.NewBaseError(msg, err))
 		return
 	}
 
-	log.Info("request received", "req", req)
+	log.InfoContext(r.Context(), "request received", "req", req)
 
 	if err := h.validator.Struct(req); err != nil {
-		msg := "validation error"
-		log.Error(msg, "error", err)
+		msg := response.ValidationErrorCode
+		log.ErrorContext(r.Context(), msg, "error", err)
 
 		var validationErr validator.ValidationErrors
 		if !errors.As(err, &validationErr) {
@@ -185,12 +183,12 @@ func (h *Handler) getOrder(w http.ResponseWriter, r *http.Request) {
 
 	orderID := r.PathValue(orderIDKey)
 	if orderID == "" {
-		msg := "order id is required"
-		log.Error(msg, "error", orderID)
+		msg := response.OrderIDRequiredErrorCode
+		log.ErrorContext(r.Context(), msg, "error", orderID)
 		h.respond(w, http.StatusBadRequest, response.NewBaseError(msg, nil))
 		return
 	}
-	log.Debug("order id parsed", "order_id", orderID)
+	log.DebugContext(r.Context(), "order id parsed", "order_id", orderID)
 
 	h.respond(w, http.StatusOK, response.Order{
 		Items: []response.OrderItem{},
@@ -213,7 +211,7 @@ func (h *Handler) getAllOrders(w http.ResponseWriter, r *http.Request) {
 	// 	return
 	// }
 	//
-	log.Debug("getting all orders")
+	log.DebugContext(r.Context(), "getting all orders")
 
 	h.respond(w, http.StatusOK, response.AllOrders{
 		Orders: []response.Order{},
@@ -230,12 +228,12 @@ func (h *Handler) cancelOrder(w http.ResponseWriter, r *http.Request) {
 
 	orderID := r.PathValue(orderIDKey)
 	if orderID == "" {
-		msg := "order id is required"
-		log.Error(msg, "error", orderID)
+		msg := response.OrderIDRequiredErrorCode
+		log.ErrorContext(r.Context(), msg, "error", orderID)
 		h.respond(w, http.StatusBadRequest, response.NewBaseError(msg, nil))
 		return
 	}
-	log.Debug("order id parsed", "order_id", orderID)
+	log.DebugContext(r.Context(), "order id parsed", "order_id", orderID)
 
 	// orders, err := h.customer.CancelOrder(r.Context(), orderID)
 	// if err != nil {

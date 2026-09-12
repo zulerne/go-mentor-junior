@@ -2,7 +2,6 @@ package config
 
 import (
 	"os"
-	"strconv"
 	"time"
 
 	"github.com/go-playground/validator/v10"
@@ -51,17 +50,6 @@ func MustLoad() *Config {
 	}
 
 	return cfg
-}
-
-func parseInt(val string, defVal int) int {
-	if val == "" {
-		return defVal
-	}
-	i, err := strconv.Atoi(val)
-	if err != nil {
-		panic("failed to parse int from string")
-	}
-	return i
 }
 
 func parseString(val string, defVal string) string {

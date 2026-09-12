@@ -17,11 +17,12 @@ type ErrorData struct {
 	Details any       `json:"details"`
 }
 
-type ErrorCode string
+type ErrorCode = string
 
 const (
-	BaseErrorCode       ErrorCode = "BASE_ERROR"
-	ValidationErrorCode ErrorCode = "VALIDATION_ERROR"
+	BaseErrorCode            ErrorCode = "BASE_ERROR"
+	ValidationErrorCode      ErrorCode = "VALIDATION_ERROR"
+	OrderIDRequiredErrorCode ErrorCode = "ORDER_ID_REQUIRED"
 
 	CustomerNotFoundErrorCode             ErrorCode = "CUSTOMER_NOT_FOUND"
 	RestaurantNotFoundErrorCode           ErrorCode = "RESTAURANT_NOT_FOUND"
@@ -69,7 +70,7 @@ func NewBaseError(msg string, err error) Error {
 	}
 }
 
-// NewValidationError creates a new validation error from the given validator.ValidationErrors ()
+// NewValidationError creates a new validation error from the given validator.ValidationErrors ().
 func NewValidationError(errs validator.ValidationErrors) Error {
 	var msgs []string
 

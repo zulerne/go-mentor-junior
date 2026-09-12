@@ -13,8 +13,8 @@ type OrderStore interface {
 }
 
 type DeliveryProvider interface {
-	Create(ctx context.Context, order_id string) error
-	Start(ctx context.Context, order_id string) error
+	Create(ctx context.Context, orderID string) error
+	Start(ctx context.Context, orderID string) error
 }
 
 type Service struct {

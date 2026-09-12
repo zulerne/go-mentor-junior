@@ -6,9 +6,10 @@ import (
 	"time"
 )
 
-// responseWriter wraps http.ResponseWriter to capture the status code
+// responseWriter wraps [http.ResponseWriter] to capture the status code.
 type responseWriter struct {
 	http.ResponseWriter
+
 	statusCode int
 	written    bool
 }
@@ -35,7 +36,7 @@ func (rw *responseWriter) Write(b []byte) (int, error) {
 	return rw.ResponseWriter.Write(b)
 }
 
-// Unwrap returns the underlying ResponseWriter for http.ResponseController compatibility
+// Unwrap returns the underlying ResponseWriter for [http.ResponseController] compatibility.
 func (rw *responseWriter) Unwrap() http.ResponseWriter {
 	return rw.ResponseWriter
 }
@@ -47,7 +48,7 @@ func Logger(log *slog.Logger) Middleware {
 			ww := newWrapResponseWriter(w)
 			start := time.Now()
 			defer func() {
-				log.Info("HTTP",
+				log.InfoContext(r.Context(), "HTTP",
 					"method", r.Method,
 					"path", r.URL.Path,
 					"status", ww.statusCode,

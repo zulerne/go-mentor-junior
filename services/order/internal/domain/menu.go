@@ -1,7 +1,7 @@
 package domain
 
 type MenuItem struct {
-	Id          string
+	ID          string
 	Name        string
 	Description string
 	PriceMinor  int64

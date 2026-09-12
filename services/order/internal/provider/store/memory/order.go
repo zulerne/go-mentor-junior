@@ -33,7 +33,7 @@ func NewOrderStore() *OrderStore {
 	}
 }
 
-func (s *OrderStore) Find(ctx context.Context, id string) (domain.Order, error) {
+func (s *OrderStore) Find(_ context.Context, id string) (domain.Order, error) {
 	order, ok := s.data[id]
 	if !ok {
 		return domain.Order{}, nil
@@ -41,7 +41,7 @@ func (s *OrderStore) Find(ctx context.Context, id string) (domain.Order, error) 
 	return order, nil
 }
 
-func (s *OrderStore) FindByRestaurant(ctx context.Context, restaurantID string) ([]domain.Order, error) {
+func (s *OrderStore) FindByRestaurant(_ context.Context, restaurantID string) ([]domain.Order, error) {
 	var orders []domain.Order
 	for _, order := range s.data {
 		if order.RestaurantID == restaurantID {

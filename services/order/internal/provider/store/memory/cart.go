@@ -16,11 +16,11 @@ type CartStore struct {
 func NewCartStore() *CartStore {
 	data := make(map[string]domain.Cart)
 
-	restaurantId := "restaurant_id_1"
+	restaurantID := "restaurant_id_1"
 	currency := "USD"
 
 	data["test"] = domain.Cart{
-		RestaurantID: &restaurantId,
+		RestaurantID: &restaurantID,
 		Items: []domain.CartItem{
 			{
 				MenuItemID:     "menu_item_id_1",
@@ -40,30 +40,36 @@ func NewCartStore() *CartStore {
 	}
 }
 
-func (s *CartStore) AddItem(ctx context.Context, restaurantId, customerId string, menuItem domain.MenuItem, quantity int, instructions string) error {
-	cart, ok := s.data[customerId]
+func (s *CartStore) AddItem(
+	_ context.Context,
+	restaurantID, customerID string,
+	menuItem domain.MenuItem,
+	quantity int,
+	instructions string,
+) error {
+	cart, ok := s.data[customerID]
 	if !ok {
 		cart = domain.Cart{
-			RestaurantID:  &restaurantId,
+			RestaurantID:  &restaurantID,
 			Items:         []domain.CartItem{},
 			SubtotalMinor: 0,
 			Currency:      &menuItem.Currency,
 		}
 	}
-	s.data[customerId] = cart
+	s.data[customerID] = cart
 
 	cart.Items = append(cart.Items, domain.CartItem{
-		MenuItemID:   menuItem.Id,
+		MenuItemID:   menuItem.ID,
 		Quantity:     int32(quantity),
 		Instructions: instructions,
 	})
 	cart.SubtotalMinor += int64(quantity) * menuItem.PriceMinor
-	s.data[customerId] = cart
+	s.data[customerID] = cart
 	return nil
 }
 
-func (s *CartStore) FindCart(ctx context.Context, customerId string) (domain.Cart, error) {
-	cart, ok := s.data[customerId]
+func (s *CartStore) FindCart(_ context.Context, customerID string) (domain.Cart, error) {
+	cart, ok := s.data[customerID]
 	if !ok {
 		return domain.Cart{}, nil
 	}

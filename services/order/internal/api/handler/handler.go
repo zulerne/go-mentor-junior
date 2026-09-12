@@ -16,7 +16,7 @@ const (
 	orderIDKey    = "order_id"
 )
 
-// Handler holds all dependencies for HTTP handlers
+// Handler holds all dependencies for HTTP handlers.
 type Handler struct {
 	customer   *customer.Service
 	restaurant *restaurant.Service
@@ -50,10 +50,22 @@ func New(cust *customer.Service, rest *restaurant.Service, log *slog.Logger) htt
 	restaurantIDMiddleware := middleware.RestaurantID(log)
 
 	mux.Handle("GET /restaurant/orders", restaurantIDMiddleware(http.HandlerFunc(h.getRestaurantOrders)))
-	mux.Handle("POST /restaurant/orders/{order_id}/accept", restaurantIDMiddleware(http.HandlerFunc(h.acceptRestaurantOrder)))
-	mux.Handle("POST /restaurant/orders/{order_id}/reject", restaurantIDMiddleware(http.HandlerFunc(h.rejectRestaurantOrder)))
-	mux.Handle("POST /restaurant/orders/{order_id}/start-preparation", restaurantIDMiddleware(http.HandlerFunc(h.prepareRestaurantOrder)))
-	mux.Handle("POST /restaurant/orders/{order_id}/ready", restaurantIDMiddleware(http.HandlerFunc(h.readyRestaurantOrder)))
+	mux.Handle(
+		"POST /restaurant/orders/{order_id}/accept",
+		restaurantIDMiddleware(http.HandlerFunc(h.acceptRestaurantOrder)),
+	)
+	mux.Handle(
+		"POST /restaurant/orders/{order_id}/reject",
+		restaurantIDMiddleware(http.HandlerFunc(h.rejectRestaurantOrder)),
+	)
+	mux.Handle(
+		"POST /restaurant/orders/{order_id}/start-preparation",
+		restaurantIDMiddleware(http.HandlerFunc(h.prepareRestaurantOrder)),
+	)
+	mux.Handle(
+		"POST /restaurant/orders/{order_id}/ready",
+		restaurantIDMiddleware(http.HandlerFunc(h.readyRestaurantOrder)),
+	)
 
 	return middleware.Chain(
 		mux,
@@ -77,10 +89,10 @@ func (h *Handler) respond(w http.ResponseWriter, status int, v any) {
 	}
 }
 
-func (h *Handler) livez(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) livez(w http.ResponseWriter, _ *http.Request) {
 	h.respond(w, http.StatusOK, nil)
 }
 
-func (h *Handler) readyz(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) readyz(w http.ResponseWriter, _ *http.Request) {
 	h.respond(w, http.StatusOK, nil)
 }

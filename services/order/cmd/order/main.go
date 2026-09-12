@@ -66,7 +66,10 @@ func main() {
 
 		if err := srv.Shutdown(shutdownCtx); err != nil {
 			log.Error("failed to shutdown server gracefully", "error", err)
-			srv.Close()
+			closeErr := srv.Close()
+			if closeErr != nil {
+				log.Error("failed to close server", "error", closeErr)
+			}
 		} else {
 			log.Info("server stopped gracefully")
 		}

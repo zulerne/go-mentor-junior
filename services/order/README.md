@@ -56,6 +56,12 @@ task vet
 task lint
 ```
 
+### Lint Fix
+
+```bash
+task lint-fix
+```
+
 ### Test
 
 ```bash

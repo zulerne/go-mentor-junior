@@ -9,7 +9,8 @@ import (
 // TODO (review): Do I need these middleware(customer/restaurant ids) or should I extract them manually from the request?
 
 const (
-	CustomerIDKey    = "customer_id"
+	CustomerIDKey ContextKey = "customer_id"
+
 	customerIDHeader = "X-Customer-ID"
 )
 
@@ -17,14 +18,17 @@ func CustomerID(log *slog.Logger) Middleware {
 	log.Debug("CustomerID middleware initialized")
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			log.Debug("Checking for X-Customer-ID header")
+			log.DebugContext(r.Context(), "Checking for X-Customer-ID header")
 
 			h := r.Header.Get(customerIDHeader)
 
 			if h == "" {
-				log.Warn("X-Customer-ID header is missing")
+				log.WarnContext(r.Context(), "X-Customer-ID header is missing")
 				w.WriteHeader(http.StatusBadRequest)
-				w.Write([]byte("X-Customer-ID header is required"))
+				_, err := w.Write([]byte("X-Customer-ID header is required"))
+				if err != nil {
+					log.ErrorContext(r.Context(), "Failed to write response", "error", err)
+				}
 				return
 			}
 

@@ -21,7 +21,7 @@ const (
 )
 
 type OrderItem struct {
-	MenuItemId     string
+	MenuItemID     string
 	Name           string
 	UnitPriceMinor int64
 	Quantity       int32
