@@ -18,10 +18,10 @@ type ErrorData struct {
 	Details any    `json:"details"`
 }
 
-func NewError(err domain.Error) Error {
+func NewError(err *domain.Error) Error {
 	return Error{
 		ErrorData: ErrorData{
-			Code:    string(err.Code),
+			Code:    err.Code,
 			Message: err.Message,
 			Details: err.Details,
 		},

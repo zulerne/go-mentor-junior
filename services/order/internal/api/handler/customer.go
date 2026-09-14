@@ -28,6 +28,13 @@ func (h *Handler) getCart(w http.ResponseWriter, r *http.Request) {
 		customerID,
 	)
 	if err != nil {
+		if dErr, ok := errors.AsType[*domain.Error](err); ok {
+			if dErr.Code == domain.CustomerNotFoundErrorCode {
+				h.respond(w, http.StatusNotFound, response.NewError(dErr))
+				return
+			}
+		}
+
 		log.ErrorContext(r.Context(), "failed to get cart", "error", err)
 		h.respond(w, http.StatusInternalServerError, nil)
 		return

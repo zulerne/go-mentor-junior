@@ -25,6 +25,13 @@ func (h *Handler) getRestaurantOrders(w http.ResponseWriter, r *http.Request) {
 
 	orders, err := h.restaurant.GetOrders(r.Context(), restaurantID)
 	if err != nil {
+		if dErr, ok := errors.AsType[*domain.Error](err); ok {
+			if dErr.Code == domain.RestaurantNotFoundErrorCode {
+				h.respond(w, http.StatusNotFound, response.NewError(dErr))
+				return
+			}
+		}
+		log.ErrorContext(r.Context(), "failed to get orders", "error", err)
 		h.respond(w, http.StatusInternalServerError, nil)
 		return
 	}
