@@ -20,6 +20,8 @@ const (
 	InDelivery            OrderDeliveryStatus = "IN_DELIVERY"
 )
 
+// TODO: Add micro/mini types for id fields
+
 type OrderItem struct {
 	MenuItemID     string
 	Name           string
