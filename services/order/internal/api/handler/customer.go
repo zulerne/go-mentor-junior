@@ -30,13 +30,13 @@ func (h *Handler) getCart(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		if dErr, ok := errors.AsType[*domain.Error](err); ok {
 			if dErr.Code == domain.CustomerNotFoundErrorCode {
-				h.respond(w, http.StatusNotFound, response.NewError(dErr))
+				h.respondJSON(w, http.StatusNotFound, response.NewError(dErr))
 				return
 			}
 		}
 
 		log.ErrorContext(r.Context(), "failed to get cart", "error", err)
-		h.respond(w, http.StatusInternalServerError, nil)
+		h.respondJSON(w, http.StatusInternalServerError, nil)
 		return
 	}
 
@@ -52,7 +52,7 @@ func (h *Handler) getCart(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	h.respond(w, http.StatusOK, response.Cart{
+	h.respondJSON(w, http.StatusOK, response.Cart{
 		RestaurantID:  cart.RestaurantID,
 		Items:         cartItems,
 		SubtotalMinor: cart.SubtotalMinor,
@@ -78,7 +78,7 @@ func (h *Handler) addItemToCart(w http.ResponseWriter, r *http.Request) {
 	if menuItemID == "" {
 		msg := "menu item id is required"
 		log.DebugContext(r.Context(), msg, "error", menuItemID)
-		h.respond(w, http.StatusBadRequest, response.NewBaseError(msg))
+		h.respondJSON(w, http.StatusBadRequest, response.NewBaseError(msg))
 		return
 	}
 	log.DebugContext(r.Context(), "menu item id parsed", "menu_item_id", menuItemID)
@@ -87,7 +87,7 @@ func (h *Handler) addItemToCart(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		msg := "failed to decode request"
 		log.DebugContext(r.Context(), msg, "error", err)
-		h.respond(w, http.StatusBadRequest, response.NewBaseError(msg))
+		h.respondJSON(w, http.StatusBadRequest, response.NewBaseError(msg))
 		return
 	}
 
@@ -99,11 +99,11 @@ func (h *Handler) addItemToCart(w http.ResponseWriter, r *http.Request) {
 
 		var validationErr validator.ValidationErrors
 		if !errors.As(err, &validationErr) {
-			h.respond(w, http.StatusInternalServerError, response.NewBaseError(msg))
+			h.respondJSON(w, http.StatusInternalServerError, response.NewBaseError(msg))
 			return
 		}
 
-		h.respond(w, http.StatusBadRequest, response.NewValidationError(validationErr))
+		h.respondJSON(w, http.StatusBadRequest, response.NewValidationError(validationErr))
 		return
 	}
 
@@ -115,7 +115,7 @@ func (h *Handler) addItemToCart(w http.ResponseWriter, r *http.Request) {
 	// 	return
 	// }
 
-	h.respond(w, http.StatusOK, response.Cart{
+	h.respondJSON(w, http.StatusOK, response.Cart{
 		Items: []response.CardItem{},
 	})
 }
@@ -132,12 +132,12 @@ func (h *Handler) removeItemFromCart(w http.ResponseWriter, r *http.Request) {
 	if menuItemID == "" {
 		msg := "menu item id is required"
 		log.DebugContext(r.Context(), msg, "error", menuItemID)
-		h.respond(w, http.StatusBadRequest, response.NewBaseError(msg))
+		h.respondJSON(w, http.StatusBadRequest, response.NewBaseError(msg))
 		return
 	}
 	log.DebugContext(r.Context(), "menu item id parsed", "menu_item_id", menuItemID)
 
-	h.respond(w, http.StatusNoContent, nil)
+	h.respondJSON(w, http.StatusNoContent, nil)
 }
 
 type createOrderRequest struct {
@@ -156,7 +156,7 @@ func (h *Handler) createOrder(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		msg := "failed to decode request body"
 		log.DebugContext(r.Context(), msg, "error", err)
-		h.respond(w, http.StatusBadRequest, response.NewBaseError(msg))
+		h.respondJSON(w, http.StatusBadRequest, response.NewBaseError(msg))
 		return
 	}
 
@@ -168,15 +168,15 @@ func (h *Handler) createOrder(w http.ResponseWriter, r *http.Request) {
 
 		var validationErr validator.ValidationErrors
 		if !errors.As(err, &validationErr) {
-			h.respond(w, http.StatusInternalServerError, response.NewBaseError(msg))
+			h.respondJSON(w, http.StatusInternalServerError, response.NewBaseError(msg))
 			return
 		}
 
-		h.respond(w, http.StatusBadRequest, response.NewValidationError(validationErr))
+		h.respondJSON(w, http.StatusBadRequest, response.NewValidationError(validationErr))
 		return
 	}
 
-	h.respond(w, http.StatusCreated, response.Order{
+	h.respondJSON(w, http.StatusCreated, response.Order{
 		Items: []response.OrderItem{},
 	})
 }
@@ -193,12 +193,12 @@ func (h *Handler) getOrder(w http.ResponseWriter, r *http.Request) {
 	if orderID == "" {
 		msg := domain.OrderIDRequiredErrorCode
 		log.DebugContext(r.Context(), msg, "error", orderID)
-		h.respond(w, http.StatusBadRequest, response.NewBaseError(msg))
+		h.respondJSON(w, http.StatusBadRequest, response.NewBaseError(msg))
 		return
 	}
 	log.DebugContext(r.Context(), "order id parsed", "order_id", orderID)
 
-	h.respond(w, http.StatusOK, response.Order{
+	h.respondJSON(w, http.StatusOK, response.Order{
 		Items: []response.OrderItem{},
 	})
 }
@@ -221,7 +221,7 @@ func (h *Handler) getAllOrders(w http.ResponseWriter, r *http.Request) {
 	//
 	log.DebugContext(r.Context(), "getting all orders")
 
-	h.respond(w, http.StatusOK, response.AllOrders{
+	h.respondJSON(w, http.StatusOK, response.AllOrders{
 		Orders: []response.Order{},
 	})
 }
@@ -238,7 +238,7 @@ func (h *Handler) cancelOrder(w http.ResponseWriter, r *http.Request) {
 	if orderID == "" {
 		msg := domain.OrderIDRequiredErrorCode
 		log.DebugContext(r.Context(), msg, "error", orderID)
-		h.respond(w, http.StatusBadRequest, response.NewBaseError(msg))
+		h.respondJSON(w, http.StatusBadRequest, response.NewBaseError(msg))
 		return
 	}
 	log.DebugContext(r.Context(), "order id parsed", "order_id", orderID)
@@ -252,7 +252,7 @@ func (h *Handler) cancelOrder(w http.ResponseWriter, r *http.Request) {
 	// }
 	//
 
-	h.respond(w, http.StatusOK, response.Order{
+	h.respondJSON(w, http.StatusOK, response.Order{
 		Items: []response.OrderItem{},
 	})
 }

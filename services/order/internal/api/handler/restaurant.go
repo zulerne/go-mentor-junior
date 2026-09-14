@@ -27,12 +27,12 @@ func (h *Handler) getRestaurantOrders(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		if dErr, ok := errors.AsType[*domain.Error](err); ok {
 			if dErr.Code == domain.RestaurantNotFoundErrorCode {
-				h.respond(w, http.StatusNotFound, response.NewError(dErr))
+				h.respondJSON(w, http.StatusNotFound, response.NewError(dErr))
 				return
 			}
 		}
 		log.ErrorContext(r.Context(), "failed to get orders", "error", err)
-		h.respond(w, http.StatusInternalServerError, nil)
+		h.respondJSON(w, http.StatusInternalServerError, nil)
 		return
 	}
 
@@ -57,7 +57,7 @@ func (h *Handler) getRestaurantOrders(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	h.respond(w, http.StatusOK, response.AllOrders{
+	h.respondJSON(w, http.StatusOK, response.AllOrders{
 		Orders: orderResponses,
 	})
 }
@@ -74,12 +74,12 @@ func (h *Handler) acceptRestaurantOrder(w http.ResponseWriter, r *http.Request) 
 	if orderID == "" {
 		msg := domain.OrderIDRequiredErrorCode
 		log.DebugContext(r.Context(), msg, "error", orderID)
-		h.respond(w, http.StatusBadRequest, response.NewBaseError(msg))
+		h.respondJSON(w, http.StatusBadRequest, response.NewBaseError(msg))
 		return
 	}
 	log.DebugContext(r.Context(), "order id parsed", "order_id", orderID)
 
-	h.respond(w, http.StatusOK, response.Order{
+	h.respondJSON(w, http.StatusOK, response.Order{
 		Items: []response.OrderItem{},
 	})
 }
@@ -100,7 +100,7 @@ func (h *Handler) rejectRestaurantOrder(w http.ResponseWriter, r *http.Request) 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		msg := "failed to decode request"
 		log.DebugContext(r.Context(), msg, "error", err)
-		h.respond(w, http.StatusBadRequest, response.NewBaseError(msg))
+		h.respondJSON(w, http.StatusBadRequest, response.NewBaseError(msg))
 		return
 	}
 
@@ -112,15 +112,15 @@ func (h *Handler) rejectRestaurantOrder(w http.ResponseWriter, r *http.Request) 
 
 		var validationErr validator.ValidationErrors
 		if !errors.As(err, &validationErr) {
-			h.respond(w, http.StatusInternalServerError, response.NewBaseError(msg))
+			h.respondJSON(w, http.StatusInternalServerError, response.NewBaseError(msg))
 			return
 		}
 
-		h.respond(w, http.StatusBadRequest, response.NewValidationError(validationErr))
+		h.respondJSON(w, http.StatusBadRequest, response.NewValidationError(validationErr))
 		return
 	}
 
-	h.respond(w, http.StatusOK, response.Order{
+	h.respondJSON(w, http.StatusOK, response.Order{
 		Items: []response.OrderItem{},
 	})
 }
@@ -137,12 +137,12 @@ func (h *Handler) prepareRestaurantOrder(w http.ResponseWriter, r *http.Request)
 	if orderID == "" {
 		msg := domain.OrderIDRequiredErrorCode
 		log.DebugContext(r.Context(), msg, "error", orderID)
-		h.respond(w, http.StatusBadRequest, response.NewBaseError(msg))
+		h.respondJSON(w, http.StatusBadRequest, response.NewBaseError(msg))
 		return
 	}
 	log.DebugContext(r.Context(), "order id parsed", "order_id", orderID)
 
-	h.respond(w, http.StatusOK, response.Order{
+	h.respondJSON(w, http.StatusOK, response.Order{
 		Items: []response.OrderItem{},
 	})
 }
@@ -159,12 +159,12 @@ func (h *Handler) readyRestaurantOrder(w http.ResponseWriter, r *http.Request) {
 	if orderID == "" {
 		msg := domain.OrderIDRequiredErrorCode
 		log.DebugContext(r.Context(), msg, "error", orderID)
-		h.respond(w, http.StatusBadRequest, response.NewBaseError(msg))
+		h.respondJSON(w, http.StatusBadRequest, response.NewBaseError(msg))
 		return
 	}
 	log.DebugContext(r.Context(), "order id parsed", "order_id", orderID)
 
-	h.respond(w, http.StatusOK, response.Order{
+	h.respondJSON(w, http.StatusOK, response.Order{
 		Items: []response.OrderItem{},
 	})
 }

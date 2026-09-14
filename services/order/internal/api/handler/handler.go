@@ -77,7 +77,7 @@ func New(cust *customer.Service, rest *restaurant.Service, log *slog.Logger) htt
 
 // TODO (review): Is it okay to have helper functions like these below?
 
-func (h *Handler) respond(w http.ResponseWriter, status int, v any) {
+func (h *Handler) respondJSON(w http.ResponseWriter, status int, v any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 
@@ -91,9 +91,9 @@ func (h *Handler) respond(w http.ResponseWriter, status int, v any) {
 }
 
 func (h *Handler) livez(w http.ResponseWriter, _ *http.Request) {
-	h.respond(w, http.StatusOK, nil)
+	h.respondJSON(w, http.StatusOK, nil)
 }
 
 func (h *Handler) readyz(w http.ResponseWriter, _ *http.Request) {
-	h.respond(w, http.StatusOK, nil)
+	h.respondJSON(w, http.StatusOK, nil)
 }
