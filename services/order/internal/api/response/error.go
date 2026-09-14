@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/zulerne/go-mentor-junior/order/internal/domain"
 )
 
 type Error struct {
@@ -12,60 +13,26 @@ type Error struct {
 }
 
 type ErrorData struct {
-	Code    ErrorCode `json:"code"`
-	Message string    `json:"message"`
-	Details any       `json:"details"`
+	Code    string `json:"code"`
+	Message string `json:"message"`
+	Details any    `json:"details"`
 }
 
-type ErrorCode = string
-
-const (
-	BaseErrorCode            ErrorCode = "BASE_ERROR"
-	ValidationErrorCode      ErrorCode = "VALIDATION_ERROR"
-	OrderIDRequiredErrorCode ErrorCode = "ORDER_ID_REQUIRED"
-
-	CustomerNotFoundErrorCode             ErrorCode = "CUSTOMER_NOT_FOUND"
-	RestaurantNotFoundErrorCode           ErrorCode = "RESTAURANT_NOT_FOUND"
-	RestaurantNotAcceptingOrdersErrorCode ErrorCode = "RESTAURANT_NOT_ACCEPTING_ORDERS"
-	MenuItemNotFoundErrorCode             ErrorCode = "MENU_ITEM_NOT_FOUND"
-	MenuItemUnavailableErrorCode          ErrorCode = "MENU_ITEM_UNAVAILABLE"
-	CartRestaurantConflictErrorCode       ErrorCode = "CART_RESTAURANT_CONFLICT"
-	CartLimitExceededErrorCode            ErrorCode = "CART_LIMIT_EXCEEDED"
-	InvalidQuantityErrorCode              ErrorCode = "INVALID_QUANTITY"
-	InvalidInstructionsErrorCode          ErrorCode = "INVALID_INSTRUCTIONS"
-	EmptyCartErrorCode                    ErrorCode = "EMPTY_CART"
-	MinimumOrderNotReachedErrorCode       ErrorCode = "MINIMUM_ORDER_NOT_REACHED"
-	InvalidDeliveryAddressErrorCode       ErrorCode = "INVALID_DELIVERY_ADDRESS"
-	OrderNotFoundErrorCode                ErrorCode = "ORDER_NOT_FOUND"
-	OrderAccessDeniedErrorCode            ErrorCode = "ORDER_ACCESS_DENIED"
-	RejectionReasonRequiredErrorCode      ErrorCode = "REJECTION_REASON_REQUIRED"
-	InvalidOrderTransitionErrorCode       ErrorCode = "INVALID_ORDER_TRANSITION"
-	DeliveryCreationFailedErrorCode       ErrorCode = "DELIVERY_CREATION_FAILED"
-	DeliveryTransitionFailedErrorCode     ErrorCode = "DELIVERY_TRANSITION_FAILED"
-	DependencyUnavailableErrorCode        ErrorCode = "DEPENDENCY_UNAVAILABLE"
-)
-
-func NewError(code ErrorCode, message string, details ...string) Error {
+func NewError(err domain.Error) Error {
 	return Error{
 		ErrorData: ErrorData{
-			Code:    code,
-			Message: message,
-			Details: details,
+			Code:    string(err.Code),
+			Message: err.Message,
+			Details: err.Details,
 		},
 	}
 }
 
-func NewBaseError(msg string, err error) Error {
-	var details string
-	if err != nil {
-		details = err.Error()
-	}
-
+func NewBaseError(msg string) Error {
 	return Error{
 		ErrorData: ErrorData{
-			Code:    BaseErrorCode,
+			Code:    domain.BaseErrorCode,
 			Message: msg,
-			Details: details,
 		},
 	}
 }
@@ -85,7 +52,7 @@ func NewValidationError(errs validator.ValidationErrors) Error {
 
 	return Error{
 		ErrorData: ErrorData{
-			Code:    ValidationErrorCode,
+			Code:    domain.ValidationErrorCode,
 			Message: strings.Join(msgs, ", "),
 		},
 	}

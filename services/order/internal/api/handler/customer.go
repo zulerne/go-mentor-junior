@@ -9,6 +9,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/zulerne/go-mentor-junior/order/internal/api/middleware"
 	"github.com/zulerne/go-mentor-junior/order/internal/api/response"
+	"github.com/zulerne/go-mentor-junior/order/internal/domain"
 )
 
 func (h *Handler) getCart(w http.ResponseWriter, r *http.Request) {
@@ -69,8 +70,8 @@ func (h *Handler) addItemToCart(w http.ResponseWriter, r *http.Request) {
 	menuItemID := r.PathValue(menuItemIDKey)
 	if menuItemID == "" {
 		msg := "menu item id is required"
-		log.ErrorContext(r.Context(), msg, "error", menuItemID)
-		h.respond(w, http.StatusBadRequest, response.NewBaseError(msg, nil))
+		log.DebugContext(r.Context(), msg, "error", menuItemID)
+		h.respond(w, http.StatusBadRequest, response.NewBaseError(msg))
 		return
 	}
 	log.DebugContext(r.Context(), "menu item id parsed", "menu_item_id", menuItemID)
@@ -78,20 +79,20 @@ func (h *Handler) addItemToCart(w http.ResponseWriter, r *http.Request) {
 	var req addItemToCartRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		msg := "failed to decode request"
-		log.ErrorContext(r.Context(), msg, "error", err)
-		h.respond(w, http.StatusBadRequest, response.NewBaseError(msg, err))
+		log.DebugContext(r.Context(), msg, "error", err)
+		h.respond(w, http.StatusBadRequest, response.NewBaseError(msg))
 		return
 	}
 
 	log.InfoContext(r.Context(), "request received")
 
 	if err := h.validator.Struct(req); err != nil {
-		msg := response.ValidationErrorCode
-		log.ErrorContext(r.Context(), msg, "error", err)
+		msg := domain.ValidationErrorCode
+		log.DebugContext(r.Context(), msg, "error", err)
 
 		var validationErr validator.ValidationErrors
 		if !errors.As(err, &validationErr) {
-			h.respond(w, http.StatusInternalServerError, response.NewBaseError(msg, err))
+			h.respond(w, http.StatusInternalServerError, response.NewBaseError(msg))
 			return
 		}
 
@@ -123,8 +124,8 @@ func (h *Handler) removeItemFromCart(w http.ResponseWriter, r *http.Request) {
 	menuItemID := r.PathValue(menuItemIDKey)
 	if menuItemID == "" {
 		msg := "menu item id is required"
-		log.ErrorContext(r.Context(), msg, "error", menuItemID)
-		h.respond(w, http.StatusBadRequest, response.NewBaseError(msg, nil))
+		log.DebugContext(r.Context(), msg, "error", menuItemID)
+		h.respond(w, http.StatusBadRequest, response.NewBaseError(msg))
 		return
 	}
 	log.DebugContext(r.Context(), "menu item id parsed", "menu_item_id", menuItemID)
@@ -147,20 +148,20 @@ func (h *Handler) createOrder(w http.ResponseWriter, r *http.Request) {
 	var req createOrderRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		msg := "failed to decode request body"
-		log.ErrorContext(r.Context(), msg, "error", err)
-		h.respond(w, http.StatusBadRequest, response.NewBaseError(msg, err))
+		log.DebugContext(r.Context(), msg, "error", err)
+		h.respond(w, http.StatusBadRequest, response.NewBaseError(msg))
 		return
 	}
 
 	log.InfoContext(r.Context(), "request received", "req", req)
 
 	if err := h.validator.Struct(req); err != nil {
-		msg := response.ValidationErrorCode
-		log.ErrorContext(r.Context(), msg, "error", err)
+		msg := domain.ValidationErrorCode
+		log.DebugContext(r.Context(), msg, "error", err)
 
 		var validationErr validator.ValidationErrors
 		if !errors.As(err, &validationErr) {
-			h.respond(w, http.StatusInternalServerError, response.NewBaseError(msg, err))
+			h.respond(w, http.StatusInternalServerError, response.NewBaseError(msg))
 			return
 		}
 
@@ -183,9 +184,9 @@ func (h *Handler) getOrder(w http.ResponseWriter, r *http.Request) {
 
 	orderID := r.PathValue(orderIDKey)
 	if orderID == "" {
-		msg := response.OrderIDRequiredErrorCode
-		log.ErrorContext(r.Context(), msg, "error", orderID)
-		h.respond(w, http.StatusBadRequest, response.NewBaseError(msg, nil))
+		msg := domain.OrderIDRequiredErrorCode
+		log.DebugContext(r.Context(), msg, "error", orderID)
+		h.respond(w, http.StatusBadRequest, response.NewBaseError(msg))
 		return
 	}
 	log.DebugContext(r.Context(), "order id parsed", "order_id", orderID)
@@ -228,9 +229,9 @@ func (h *Handler) cancelOrder(w http.ResponseWriter, r *http.Request) {
 
 	orderID := r.PathValue(orderIDKey)
 	if orderID == "" {
-		msg := response.OrderIDRequiredErrorCode
-		log.ErrorContext(r.Context(), msg, "error", orderID)
-		h.respond(w, http.StatusBadRequest, response.NewBaseError(msg, nil))
+		msg := domain.OrderIDRequiredErrorCode
+		log.DebugContext(r.Context(), msg, "error", orderID)
+		h.respond(w, http.StatusBadRequest, response.NewBaseError(msg))
 		return
 	}
 	log.DebugContext(r.Context(), "order id parsed", "order_id", orderID)

@@ -9,6 +9,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/zulerne/go-mentor-junior/order/internal/api/middleware"
 	"github.com/zulerne/go-mentor-junior/order/internal/api/response"
+	"github.com/zulerne/go-mentor-junior/order/internal/domain"
 )
 
 func (h *Handler) getRestaurantOrders(w http.ResponseWriter, r *http.Request) {
@@ -64,9 +65,9 @@ func (h *Handler) acceptRestaurantOrder(w http.ResponseWriter, r *http.Request) 
 
 	orderID := r.PathValue(orderIDKey)
 	if orderID == "" {
-		msg := response.OrderIDRequiredErrorCode
-		log.ErrorContext(r.Context(), msg, "error", orderID)
-		h.respond(w, http.StatusBadRequest, response.NewBaseError(msg, nil))
+		msg := domain.OrderIDRequiredErrorCode
+		log.DebugContext(r.Context(), msg, "error", orderID)
+		h.respond(w, http.StatusBadRequest, response.NewBaseError(msg))
 		return
 	}
 	log.DebugContext(r.Context(), "order id parsed", "order_id", orderID)
@@ -91,20 +92,20 @@ func (h *Handler) rejectRestaurantOrder(w http.ResponseWriter, r *http.Request) 
 	var req rejectRestaurantOrderRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		msg := "failed to decode request"
-		log.ErrorContext(r.Context(), msg, "error", err)
-		h.respond(w, http.StatusBadRequest, response.NewBaseError(msg, nil))
+		log.DebugContext(r.Context(), msg, "error", err)
+		h.respond(w, http.StatusBadRequest, response.NewBaseError(msg))
 		return
 	}
 
 	log.DebugContext(r.Context(), "request received", "reason", req.Reason)
 
 	if err := h.validator.Struct(req); err != nil {
-		msg := response.ValidationErrorCode
-		log.ErrorContext(r.Context(), msg, "error", err)
+		msg := domain.ValidationErrorCode
+		log.DebugContext(r.Context(), msg, "error", err)
 
 		var validationErr validator.ValidationErrors
 		if !errors.As(err, &validationErr) {
-			h.respond(w, http.StatusInternalServerError, response.NewBaseError(msg, err))
+			h.respond(w, http.StatusInternalServerError, response.NewBaseError(msg))
 			return
 		}
 
@@ -127,9 +128,9 @@ func (h *Handler) prepareRestaurantOrder(w http.ResponseWriter, r *http.Request)
 
 	orderID := r.PathValue(orderIDKey)
 	if orderID == "" {
-		msg := response.OrderIDRequiredErrorCode
-		log.ErrorContext(r.Context(), msg, "error", orderID)
-		h.respond(w, http.StatusBadRequest, response.NewBaseError(msg, nil))
+		msg := domain.OrderIDRequiredErrorCode
+		log.DebugContext(r.Context(), msg, "error", orderID)
+		h.respond(w, http.StatusBadRequest, response.NewBaseError(msg))
 		return
 	}
 	log.DebugContext(r.Context(), "order id parsed", "order_id", orderID)
@@ -149,9 +150,9 @@ func (h *Handler) readyRestaurantOrder(w http.ResponseWriter, r *http.Request) {
 
 	orderID := r.PathValue(orderIDKey)
 	if orderID == "" {
-		msg := response.OrderIDRequiredErrorCode
-		log.ErrorContext(r.Context(), msg, "error", orderID)
-		h.respond(w, http.StatusBadRequest, response.NewBaseError(msg, nil))
+		msg := domain.OrderIDRequiredErrorCode
+		log.DebugContext(r.Context(), msg, "error", orderID)
+		h.respond(w, http.StatusBadRequest, response.NewBaseError(msg))
 		return
 	}
 	log.DebugContext(r.Context(), "order id parsed", "order_id", orderID)
