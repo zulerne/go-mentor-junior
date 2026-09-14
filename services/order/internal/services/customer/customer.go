@@ -22,18 +22,18 @@ type CartStore interface {
 	) error
 }
 
-type RestaurantProveder interface {
+type RestaurantProvider interface {
 	Find(ctx context.Context, restaurantID, menuItemID string) (domain.MenuItem, error)
 }
 
 type Service struct {
 	orderStore         OrderStore
 	cartStore          CartStore
-	restaurantProvider RestaurantProveder
+	restaurantProvider RestaurantProvider
 	log                *slog.Logger
 }
 
-func New(orderStore OrderStore, cartStore CartStore, restaurantProvider RestaurantProveder, log *slog.Logger) *Service {
+func New(orderStore OrderStore, cartStore CartStore, restaurantProvider RestaurantProvider, log *slog.Logger) *Service {
 	log = log.With("component", "customer")
 	c := &Service{
 		orderStore:         orderStore,
