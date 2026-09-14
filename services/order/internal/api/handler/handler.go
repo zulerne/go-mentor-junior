@@ -69,9 +69,9 @@ func New(cust *customer.Service, rest *restaurant.Service, log *slog.Logger) htt
 
 	return middleware.Chain(
 		mux,
-		middleware.Recoverer(log),
 		middleware.RequestID(log),
 		middleware.Logger(log),
+		middleware.Recoverer(log),
 	)
 }
 
