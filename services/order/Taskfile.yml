@@ -19,7 +19,7 @@ tasks:
       - task --list
 
   build:
-    desc: Build all four service binaries
+    desc: Build the order service binary
     cmds:
       - mkdir -p {{.BIN_DIR}}
       - go build -trimpath -o {{.BIN_DIR}}/order ./cmd/order
@@ -61,14 +61,7 @@ tasks:
       - go test -race ./...
 
   run:
-    desc: Build and run all four process skeletons
+    desc: Build and run the order service
     cmds:
       - task: build
-      - task: run-order
-
-  run-order:
-    # env:
-    #   ENV: local
-    #   HTTP_ADDRESS: :8080
-    cmds:
       - ./{{.BIN_DIR}}/order

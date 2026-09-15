@@ -30,12 +30,6 @@ task build
 task run
 ```
 
-Or run the service binary directly:
-
-```bash
-task run-order
-```
-
 ## Format and Vet
 
 ### Format
