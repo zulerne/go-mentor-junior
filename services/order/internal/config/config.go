@@ -1,0 +1,71 @@
+package config
+
+import (
+	"os"
+	"time"
+
+	"github.com/go-playground/validator/v10"
+)
+
+const (
+	EnvLocal = "local"
+	EnvProd  = "production"
+)
+
+const (
+	defaultTimeout         = 5 * time.Second
+	defaultIdleTimeout     = 60 * time.Second
+	defaultShutdownTimeout = 10 * time.Second
+)
+
+// TODO (review): Is it okay to use validatorv10 for config validation? or is it better to use other libs or manually?
+
+type Config struct {
+	Env        string     `validate:"required,oneof=local production"`
+	HTTPConfig HTTPConfig `validate:"omitempty"`
+}
+
+type HTTPConfig struct {
+	Address         string        `validate:"omitempty"`
+	Timeout         time.Duration `validate:"omitempty"`
+	IdleTimeout     time.Duration `validate:"omitempty"`
+	ShutdownTimeout time.Duration `validate:"omitempty"`
+}
+
+func MustLoad() *Config {
+	validate := validator.New(validator.WithRequiredStructEnabled())
+
+	cfg := &Config{
+		Env: parseString(os.Getenv("ENV"), EnvLocal),
+		HTTPConfig: HTTPConfig{
+			Address:         parseString(os.Getenv("HTTP_ADDR"), ":8080"),
+			Timeout:         parseDuration(os.Getenv("HTTP_TIMEOUT"), defaultTimeout),
+			IdleTimeout:     parseDuration(os.Getenv("HTTP_IDLE_TIMEOUT"), defaultIdleTimeout),
+			ShutdownTimeout: parseDuration(os.Getenv("HTTP_SHUTDOWN_TIMEOUT"), defaultShutdownTimeout),
+		},
+	}
+
+	if err := validate.Struct(cfg); err != nil {
+		panic("failed to validate config: " + err.Error())
+	}
+
+	return cfg
+}
+
+func parseString(val string, defVal string) string {
+	if val == "" {
+		return defVal
+	}
+	return val
+}
+
+func parseDuration(val string, def time.Duration) time.Duration {
+	if val == "" {
+		return def
+	}
+	dur, err := time.ParseDuration(val)
+	if err != nil {
+		panic("failed to parse duration from string: " + err.Error())
+	}
+	return dur
+}

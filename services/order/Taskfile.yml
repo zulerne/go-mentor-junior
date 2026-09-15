@@ -1,0 +1,67 @@
+version: "3"
+
+silent: true
+
+vars:
+  BIN_DIR: bin
+
+dotenv: [.env]
+
+tasks:
+  default:
+    desc: List available tasks
+    cmds:
+      - task --list
+
+  help:
+    desc: List available tasks
+    cmds:
+      - task --list
+
+  build:
+    desc: Build the order service binary
+    cmds:
+      - mkdir -p {{.BIN_DIR}}
+      - go build -trimpath -o {{.BIN_DIR}}/order ./cmd/order
+
+  fmt:
+    desc: Format Go source files
+    cmds:
+      - |
+        files="$(find . -type f -name '*.go' -not -path './.git/*')"
+        if [ -n "$files" ]; then gofmt -w $files; fi
+
+  vet:
+    desc: Run Go static analysis
+    cmds:
+      - go vet ./...
+
+  lint:
+    desc: Run Go static analysis and linter
+    cmds:
+      - task: fmt
+      - task: vet
+      - golangci-lint run
+
+  lint-fix:
+    desc: Run Go static analysis and linter and fix issues
+    cmds:
+      - task: fmt
+      - task: vet
+      - golangci-lint run --fix
+
+  test:
+    desc: Run the test suite
+    cmds:
+      - go test ./...
+
+  test-race:
+    desc: Run the test suite with the race detector
+    cmds:
+      - go test -race ./...
+
+  run:
+    desc: Build and run the order service
+    cmds:
+      - task: build
+      - ./{{.BIN_DIR}}/order
