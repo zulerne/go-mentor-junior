@@ -12,8 +12,8 @@ func (h *Handler) cancelOrder(w http.ResponseWriter, r *http.Request) {
 	op := "handler.cancelOrder"
 	log := h.log.With(
 		"op", op,
-		string(middleware.RequestIDKey), middleware.GetRequestID(r.Context()),
-		string(middleware.CustomerIDKey), middleware.GetCustomerID(r.Context()),
+		"request_id", middleware.GetRequestID(r.Context()),
+		"customer_id", middleware.GetCustomerID(r.Context()),
 	)
 
 	orderID := r.PathValue(orderIDKey)

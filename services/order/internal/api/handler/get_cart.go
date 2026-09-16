@@ -14,8 +14,8 @@ func (h *Handler) getCart(w http.ResponseWriter, r *http.Request) {
 	customerID := middleware.GetCustomerID(r.Context())
 	log := h.log.With(
 		"op", op,
-		string(middleware.RequestIDKey), middleware.GetRequestID(r.Context()),
-		string(middleware.CustomerIDKey), customerID,
+		"request_id", middleware.GetRequestID(r.Context()),
+		"customer_id", customerID,
 	)
 
 	log.InfoContext(r.Context(), "getting cart")

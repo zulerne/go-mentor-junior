@@ -11,8 +11,8 @@ func (h *Handler) removeItemFromCart(w http.ResponseWriter, r *http.Request) {
 	op := "handler.removeItemFromCart"
 	log := h.log.With(
 		"op", op,
-		string(middleware.RequestIDKey), middleware.GetRequestID(r.Context()),
-		string(middleware.CustomerIDKey), middleware.GetCustomerID(r.Context()),
+		"request_id", middleware.GetRequestID(r.Context()),
+		"customer_id", middleware.GetCustomerID(r.Context()),
 	)
 
 	menuItemID := r.PathValue(menuItemIDKey)

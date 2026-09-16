@@ -12,8 +12,8 @@ func (h *Handler) readyRestaurantOrder(w http.ResponseWriter, r *http.Request) {
 	op := "handler.readyRestaurantOrder"
 	log := h.log.With(
 		"op", op,
-		string(middleware.RequestIDKey), middleware.GetRequestID(r.Context()),
-		string(middleware.RestaurantIDKey), middleware.GetRestaurantID(r.Context()),
+		"request_id", middleware.GetRequestID(r.Context()),
+		"restaurant_id", middleware.GetRestaurantID(r.Context()),
 	)
 
 	orderID := r.PathValue(orderIDKey)

@@ -15,8 +15,8 @@ func (h *Handler) getRestaurantOrders(w http.ResponseWriter, r *http.Request) {
 	restaurantID := middleware.GetRestaurantID(r.Context())
 	log := h.log.With(
 		"op", op,
-		string(middleware.RequestIDKey), middleware.GetRequestID(r.Context()),
-		string(middleware.RestaurantIDKey), restaurantID,
+		"request_id", middleware.GetRequestID(r.Context()),
+		"restaurant_id", restaurantID,
 	)
 
 	log.DebugContext(r.Context(), "request received")

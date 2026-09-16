@@ -19,8 +19,8 @@ func (h *Handler) rejectRestaurantOrder(w http.ResponseWriter, r *http.Request) 
 	op := "handler.rejectRestaurantOrder"
 	log := h.log.With(
 		"op", op,
-		string(middleware.RequestIDKey), middleware.GetRequestID(r.Context()),
-		string(middleware.RestaurantIDKey), middleware.GetRestaurantID(r.Context()),
+		"request_id", middleware.GetRequestID(r.Context()),
+		"restaurant_id", middleware.GetRestaurantID(r.Context()),
 	)
 
 	var req rejectRestaurantOrderRequest
