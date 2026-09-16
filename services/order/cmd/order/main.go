@@ -3,7 +3,9 @@ package main
 import (
 	"context"
 	"errors"
+	"log"
 	"net/http"
+	"os"
 	"os/signal"
 	"syscall"
 
@@ -24,7 +26,11 @@ import (
 // 4. What to use: internal/services/customer and internal/services/restaurant or just internal/customer and internal/restaurant?
 
 func main() {
-	cfg := config.MustLoad()
+	cfg, err := config.Load()
+	if err != nil {
+		log.Printf("failed to load config: %v", err)
+		os.Exit(1)
+	}
 
 	log := logger.New(cfg.Env)
 
@@ -48,7 +54,7 @@ func main() {
 	go func() {
 		log.Info("starting server", "address", srv.Addr)
 
-		if err := srv.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
+		if err = srv.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
 			errCh <- err
 			return
 		}
@@ -56,7 +62,7 @@ func main() {
 	}()
 
 	select {
-	case err := <-errCh:
+	case err = <-errCh:
 		if err != nil {
 			log.Error("server error", "error", err)
 		}
@@ -64,7 +70,7 @@ func main() {
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), cfg.HTTPConfig.ShutdownTimeout)
 		defer cancel()
 
-		if err := srv.Shutdown(shutdownCtx); err != nil {
+		if err = srv.Shutdown(shutdownCtx); err != nil {
 			log.Error("failed to shutdown server gracefully", "error", err)
 			closeErr := srv.Close()
 			if closeErr != nil {
@@ -74,7 +80,7 @@ func main() {
 			log.Info("server stopped gracefully")
 		}
 
-		if err := <-errCh; err != nil {
+		if err = <-errCh; err != nil {
 			log.Error("server error", "error", err)
 		}
 	}
