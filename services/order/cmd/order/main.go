@@ -4,10 +4,12 @@ import (
 	"context"
 	"errors"
 	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/zulerne/go-mentor-junior/order/internal/api/handler"
 	"github.com/zulerne/go-mentor-junior/order/internal/config"
@@ -49,11 +51,18 @@ func main() {
 		IdleTimeout:  cfg.HTTPConfig.IdleTimeout,
 	}
 
+	if err = run(log, srv, cfg.HTTPConfig.ShutdownTimeout); err != nil {
+		log.Error("server error", "error", err)
+		os.Exit(1)
+	}
+}
+
+func run(log *slog.Logger, srv *http.Server, shutdownTimeout time.Duration) error {
 	errCh := make(chan error, 1)
 	go func() {
 		log.Info("starting server", "address", srv.Addr)
 
-		if err = srv.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
+		if err := srv.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
 			errCh <- err
 			return
 		}
@@ -64,26 +73,28 @@ func main() {
 	defer stop()
 
 	select {
-	case err = <-errCh:
+	case err := <-errCh:
 		if err != nil {
-			log.Error("server error", "error", err)
+			return err
 		}
 	case <-ctx.Done():
-		shutdownCtx, cancel := context.WithTimeout(context.Background(), cfg.HTTPConfig.ShutdownTimeout)
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
 		defer cancel()
 
-		if err = srv.Shutdown(shutdownCtx); err != nil {
-			log.Error("failed to shutdown server gracefully", "error", err)
+		if err := srv.Shutdown(shutdownCtx); err != nil {
 			closeErr := srv.Close()
 			if closeErr != nil {
-				log.Error("failed to close server", "error", closeErr)
+				return errors.Join(err, closeErr)
 			}
+			return err
 		} else {
 			log.Info("server stopped gracefully")
 		}
 
-		if err = <-errCh; err != nil {
-			log.Error("server error", "error", err)
+		if err := <-errCh; err != nil {
+			return err
 		}
 	}
+
+	return nil
 }
