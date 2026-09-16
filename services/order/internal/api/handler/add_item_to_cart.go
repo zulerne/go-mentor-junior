@@ -14,7 +14,7 @@ import (
 type addItemToCartRequest struct {
 	RestaurantID string `json:"restaurant_id" validate:"required"`
 	Quantity     int    `json:"quantity"      validate:"required"`
-	Instructions string `json:"instructions"  validate:"required"`
+	Instructions string `json:"instructions"`
 }
 
 func (h *Handler) addItemToCart(w http.ResponseWriter, r *http.Request) {
