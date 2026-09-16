@@ -14,6 +14,8 @@ type OrderStore struct {
 func NewOrderStore() *OrderStore {
 	data := make(map[string]domain.Order)
 
+	date := time.Date(2026, time.September, 1, 12, 0, 0, 0, time.UTC)
+
 	data["test"] = domain.Order{
 		ID:              "test",
 		CustomerID:      "",
@@ -25,8 +27,8 @@ func NewOrderStore() *OrderStore {
 		DeliveryAddress: "",
 		RejectionReason: nil,
 		DeliveryStatus:  nil,
-		CreatedAt:       time.Now(),
-		UpdatedAt:       time.Now(),
+		CreatedAt:       date,
+		UpdatedAt:       date,
 	}
 	return &OrderStore{
 		data: data,
