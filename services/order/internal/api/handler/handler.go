@@ -1,12 +1,14 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"log/slog"
 	"net/http"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/zulerne/go-mentor-junior/order/internal/api/middleware"
+	"github.com/zulerne/go-mentor-junior/order/internal/domain"
 	"github.com/zulerne/go-mentor-junior/order/internal/services/customer"
 	"github.com/zulerne/go-mentor-junior/order/internal/services/restaurant"
 )
@@ -16,10 +18,18 @@ const (
 	orderIDKey    = "order_id"
 )
 
+type Customer interface {
+	GetCart(ctx context.Context, customerID string) (domain.Cart, error)
+}
+
+type Restaurant interface {
+	GetOrders(ctx context.Context, restaurantID string) ([]domain.Order, error)
+}
+
 // Handler holds all dependencies for HTTP handlers.
 type Handler struct {
-	customer   *customer.Service
-	restaurant *restaurant.Service
+	customer   Customer
+	restaurant Restaurant
 	validator  *validator.Validate
 	log        *slog.Logger
 }
