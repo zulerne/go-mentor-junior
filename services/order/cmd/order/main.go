@@ -35,8 +35,10 @@ func main() {
 	log := logger.New(cfg.Env)
 
 	orderStore := store.NewOrderStore()
+	cartStore := store.NewCartStore()
+	restaurantProvider := restaurantProvider.NewRestaurantProvider()
 
-	customer := customer.New(orderStore, store.NewCartStore(), restaurantProvider.NewRestaurantProvider(), log)
+	customer := customer.New(orderStore, cartStore, restaurantProvider, log)
 	restaurant := restaurant.New(orderStore, deliveryProveder.NewDeliveryProvider(), log)
 
 	srv := &http.Server{
