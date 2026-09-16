@@ -43,9 +43,10 @@ func main() {
 	customer := customer.New(orderStore, cartStore, restaurantProvider, log)
 	restaurant := restaurant.New(orderStore, deliveryProveder.NewDeliveryProvider(), log)
 
+	h := handler.New(customer, restaurant, log)
 	srv := &http.Server{
 		Addr:         cfg.HTTPConfig.Address,
-		Handler:      handler.New(customer, restaurant, log),
+		Handler:      h.Routes(),
 		WriteTimeout: cfg.HTTPConfig.Timeout,
 		ReadTimeout:  cfg.HTTPConfig.Timeout,
 		IdleTimeout:  cfg.HTTPConfig.IdleTimeout,

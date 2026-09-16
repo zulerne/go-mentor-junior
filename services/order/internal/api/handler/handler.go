@@ -24,7 +24,7 @@ type Handler struct {
 	log        *slog.Logger
 }
 
-func New(cust *customer.Service, rest *restaurant.Service, log *slog.Logger) http.Handler {
+func New(cust *customer.Service, rest *restaurant.Service, log *slog.Logger) *Handler {
 	log = log.With("component", "handler")
 	h := &Handler{
 		customer:   cust,
@@ -33,7 +33,13 @@ func New(cust *customer.Service, rest *restaurant.Service, log *slog.Logger) htt
 		log:        log,
 	}
 
+	return h
+}
+
+func (h *Handler) Routes() http.Handler {
 	mux := http.NewServeMux()
+
+	log := h.log
 	mux.HandleFunc("GET /livez", h.livez)
 	mux.HandleFunc("GET /readyz", h.readyz)
 
