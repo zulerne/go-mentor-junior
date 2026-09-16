@@ -11,6 +11,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/zulerne/go-mentor-junior/order/internal/api/handler"
 	"github.com/zulerne/go-mentor-junior/order/internal/config"
 	"github.com/zulerne/go-mentor-junior/order/internal/logger"
@@ -28,7 +29,9 @@ import (
 // 4. What to use: internal/services/customer and internal/services/restaurant or just internal/customer and internal/restaurant?
 
 func main() {
-	cfg, err := config.Load()
+	validate := validator.New(validator.WithRequiredStructEnabled())
+
+	cfg, err := config.Load(validate)
 	if err != nil {
 		log.Printf("failed to load config: %v", err)
 		os.Exit(1)
@@ -43,7 +46,7 @@ func main() {
 	customer := customer.New(orderStore, cartStore, restaurantProvider, log)
 	restaurant := restaurant.New(orderStore, deliveryProveder.NewDeliveryProvider(), log)
 
-	h := handler.New(customer, restaurant, log)
+	h := handler.New(customer, restaurant, validate, log)
 	srv := &http.Server{
 		Addr:         cfg.HTTPConfig.Address,
 		Handler:      h.Routes(),

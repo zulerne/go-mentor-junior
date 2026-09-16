@@ -34,12 +34,12 @@ type Handler struct {
 	log        *slog.Logger
 }
 
-func New(cust *customer.Service, rest *restaurant.Service, log *slog.Logger) *Handler {
+func New(cust *customer.Service, rest *restaurant.Service, validator *validator.Validate, log *slog.Logger) *Handler {
 	log = log.With("component", "handler")
 	h := &Handler{
 		customer:   cust,
 		restaurant: rest,
-		validator:  validator.New(),
+		validator:  validator,
 		log:        log,
 	}
 

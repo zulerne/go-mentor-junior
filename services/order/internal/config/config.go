@@ -34,9 +34,7 @@ type HTTPConfig struct {
 	ShutdownTimeout time.Duration `validate:"omitempty"`
 }
 
-func Load() (*Config, error) {
-	validate := validator.New(validator.WithRequiredStructEnabled())
-
+func Load(validator *validator.Validate) (*Config, error) {
 	var errs []error
 
 	timeout, err := parseDuration(os.Getenv("HTTP_TIMEOUT"), defaultTimeout)
@@ -62,7 +60,7 @@ func Load() (*Config, error) {
 		},
 	}
 
-	if err = validate.Struct(cfg); err != nil {
+	if err = validator.Struct(cfg); err != nil {
 		errs = append(errs, fmt.Errorf("failed to validate config: %w", err))
 	}
 
