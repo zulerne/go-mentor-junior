@@ -8,7 +8,6 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/zulerne/go-mentor-junior/order/internal/api/middleware"
 	"github.com/zulerne/go-mentor-junior/order/internal/api/response"
-	"github.com/zulerne/go-mentor-junior/order/internal/domain"
 )
 
 type rejectRestaurantOrderRequest struct {
@@ -34,16 +33,16 @@ func (h *Handler) rejectRestaurantOrder(w http.ResponseWriter, r *http.Request) 
 	log.DebugContext(r.Context(), "request received", "reason", req.Reason)
 
 	if err := h.validator.Struct(req); err != nil {
-		msg := domain.ValidationErrorCode
+		msg := response.ValidationErrorCode
 		log.DebugContext(r.Context(), msg, "error", err)
 
-		var validationErr validator.ValidationErrors
-		if !errors.As(err, &validationErr) {
-			h.respondJSON(w, http.StatusInternalServerError, response.NewBaseError(msg))
+		if validationErr, ok := errors.AsType[validator.ValidationErrors](err); ok {
+			h.respondJSON(w, http.StatusBadRequest, response.NewValidationError(validationErr))
 			return
 		}
 
-		h.respondJSON(w, http.StatusBadRequest, response.NewValidationError(validationErr))
+		log.ErrorContext(r.Context(), "failed to validate request", "error", err)
+		h.respondJSON(w, http.StatusInternalServerError, response.NewBaseError("server error"))
 		return
 	}
 

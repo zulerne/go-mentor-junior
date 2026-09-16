@@ -25,15 +25,18 @@ func (h *Handler) getCart(w http.ResponseWriter, r *http.Request) {
 		customerID,
 	)
 	if err != nil {
-		if dErr, ok := errors.AsType[*domain.Error](err); ok {
-			if dErr.Code == domain.CustomerNotFoundErrorCode {
-				h.respondJSON(w, http.StatusNotFound, response.NewError(dErr))
-				return
-			}
+		if errors.Is(err, domain.ErrNotFound) {
+			h.respondJSON(
+				w,
+				http.StatusNotFound,
+				response.NewError(response.CustomerNotFoundErrorCode, "customer not found", nil),
+			)
+			return
 		}
 
-		log.ErrorContext(r.Context(), "failed to get cart", "error", err)
-		h.respondJSON(w, http.StatusInternalServerError, nil)
+		msg := "failed to get cart"
+		log.ErrorContext(r.Context(), msg, "error", err)
+		h.respondJSON(w, http.StatusInternalServerError, response.NewBaseError(msg))
 		return
 	}
 

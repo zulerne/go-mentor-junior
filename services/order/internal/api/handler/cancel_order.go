@@ -5,7 +5,6 @@ import (
 
 	"github.com/zulerne/go-mentor-junior/order/internal/api/middleware"
 	"github.com/zulerne/go-mentor-junior/order/internal/api/response"
-	"github.com/zulerne/go-mentor-junior/order/internal/domain"
 )
 
 func (h *Handler) cancelOrder(w http.ResponseWriter, r *http.Request) {
@@ -18,7 +17,7 @@ func (h *Handler) cancelOrder(w http.ResponseWriter, r *http.Request) {
 
 	orderID := r.PathValue(orderIDKey)
 	if orderID == "" {
-		msg := domain.OrderIDRequiredErrorCode
+		msg := response.OrderIDRequiredErrorCode
 		log.DebugContext(r.Context(), msg, "error", orderID)
 		h.respondJSON(w, http.StatusBadRequest, response.NewBaseError(msg))
 		return

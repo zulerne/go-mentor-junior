@@ -23,14 +23,17 @@ func (h *Handler) getRestaurantOrders(w http.ResponseWriter, r *http.Request) {
 
 	orders, err := h.restaurant.GetOrders(r.Context(), restaurantID)
 	if err != nil {
-		if dErr, ok := errors.AsType[*domain.Error](err); ok {
-			if dErr.Code == domain.RestaurantNotFoundErrorCode {
-				h.respondJSON(w, http.StatusNotFound, response.NewError(dErr))
-				return
-			}
+		if errors.Is(err, domain.ErrNotFound) {
+			h.respondJSON(
+				w,
+				http.StatusNotFound,
+				response.NewError(response.RestaurantNotFoundErrorCode, "restaurant not found", nil),
+			)
+			return
 		}
-		log.ErrorContext(r.Context(), "failed to get orders", "error", err)
-		h.respondJSON(w, http.StatusInternalServerError, nil)
+		msg := "failed to get orders"
+		log.ErrorContext(r.Context(), msg, "error", err)
+		h.respondJSON(w, http.StatusInternalServerError, response.NewBaseError(msg))
 		return
 	}
 
