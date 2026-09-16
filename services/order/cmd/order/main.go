@@ -34,9 +34,6 @@ func main() {
 
 	log := logger.New(cfg.Env)
 
-	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
-	defer stop()
-
 	orderStore := store.NewOrderStore()
 
 	customer := customer.New(orderStore, store.NewCartStore(), restaurantProvider.NewRestaurantProvider(), log)
@@ -60,6 +57,9 @@ func main() {
 		}
 		errCh <- nil
 	}()
+
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
 
 	select {
 	case err = <-errCh:
