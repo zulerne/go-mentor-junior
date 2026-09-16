@@ -4,10 +4,12 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/zulerne/go-mentor-junior/order/internal/api/middleware"
 	"github.com/zulerne/go-mentor-junior/order/internal/api/response"
+	"github.com/zulerne/go-mentor-junior/order/internal/domain"
 )
 
 type createOrderRequest struct {
@@ -45,8 +47,11 @@ func (h *Handler) createOrder(w http.ResponseWriter, r *http.Request) {
 		h.respondJSON(w, http.StatusInternalServerError, response.NewBaseError("server error"))
 		return
 	}
-
+	date := time.Date(2026, time.September, 1, 12, 0, 0, 0, time.UTC).Format(time.RFC3339)
 	h.respondJSON(w, http.StatusCreated, response.Order{
-		Items: []response.OrderItem{},
+		Status:    string(domain.Pending),
+		Items:     []response.OrderItem{},
+		CreatedAt: date,
+		UpdatedAt: date,
 	})
 }

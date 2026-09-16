@@ -2,9 +2,11 @@ package handler
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/zulerne/go-mentor-junior/order/internal/api/middleware"
 	"github.com/zulerne/go-mentor-junior/order/internal/api/response"
+	"github.com/zulerne/go-mentor-junior/order/internal/domain"
 )
 
 func (h *Handler) cancelOrder(w http.ResponseWriter, r *http.Request) {
@@ -33,7 +35,11 @@ func (h *Handler) cancelOrder(w http.ResponseWriter, r *http.Request) {
 	// }
 	//
 
+	date := time.Date(2026, time.September, 1, 12, 0, 0, 0, time.UTC).Format(time.RFC3339)
 	h.respondJSON(w, http.StatusOK, response.Order{
-		Items: []response.OrderItem{},
+		Status:    string(domain.Cancelled),
+		Items:     []response.OrderItem{},
+		CreatedAt: date,
+		UpdatedAt: date,
 	})
 }
