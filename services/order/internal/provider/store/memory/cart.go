@@ -2,6 +2,8 @@ package memory
 
 import (
 	"context"
+	"slices"
+	"sync"
 
 	"github.com/zulerne/go-mentor-junior/order/internal/domain"
 )
@@ -9,9 +11,8 @@ import (
 type CartStore struct {
 	// data is a map of cart IDs to cart data
 	data map[string]domain.Cart
+	mu   sync.RWMutex
 }
-
-// AddItem(ctx context.Context, restaurantId, menuItemId string, quantity int, instructions string) error
 
 func NewCartStore() *CartStore {
 	data := make(map[string]domain.Cart)
@@ -47,6 +48,9 @@ func (s *CartStore) AddItem(
 	quantity int,
 	instructions string,
 ) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	cart, ok := s.data[customerID]
 	if !ok {
 		cart = domain.Cart{
@@ -69,9 +73,14 @@ func (s *CartStore) AddItem(
 }
 
 func (s *CartStore) FindCart(_ context.Context, customerID string) (domain.Cart, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
 	cart, ok := s.data[customerID]
 	if !ok {
 		return domain.Cart{}, nil
 	}
+
+	cart.Items = slices.Clone(cart.Items)
 	return cart, nil
 }
