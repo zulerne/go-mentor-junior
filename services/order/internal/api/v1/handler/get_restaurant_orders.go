@@ -7,7 +7,6 @@ import (
 
 	"github.com/zulerne/go-mentor-junior/order/internal/api/common"
 	"github.com/zulerne/go-mentor-junior/order/internal/api/middleware"
-	"github.com/zulerne/go-mentor-junior/order/internal/api/response"
 	"github.com/zulerne/go-mentor-junior/order/internal/domain"
 )
 
@@ -44,16 +43,16 @@ func (h *Handler) getRestaurantOrders(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	orderResponses := make([]response.Order, 0, len(orders))
+	orderResponses := make([]OrderResponse, 0, len(orders))
 	for _, order := range orders {
 		var deliveryStatus *string
 		if order.DeliveryStatus != nil {
 			deliveryStatus = (*string)(order.DeliveryStatus)
 		}
 
-		items := make([]response.OrderItem, 0, len(order.Items))
+		items := make([]OrderItem, 0, len(order.Items))
 		for _, item := range order.Items {
-			items = append(items, response.OrderItem{
+			items = append(items, OrderItem{
 				MenuItemID:     item.MenuItemID,
 				Name:           item.Name,
 				UnitPriceMinor: item.UnitPriceMinor,
@@ -62,7 +61,7 @@ func (h *Handler) getRestaurantOrders(w http.ResponseWriter, r *http.Request) {
 			})
 		}
 
-		orderResponses = append(orderResponses, response.Order{
+		orderResponses = append(orderResponses, OrderResponse{
 			ID:              order.ID,
 			CustomerID:      order.CustomerID,
 			RestaurantID:    order.RestaurantID,
@@ -82,7 +81,7 @@ func (h *Handler) getRestaurantOrders(w http.ResponseWriter, r *http.Request) {
 		log,
 		w,
 		http.StatusOK,
-		response.AllOrders{
+		AllOrdersResponse{
 			Orders: orderResponses,
 		})
 }

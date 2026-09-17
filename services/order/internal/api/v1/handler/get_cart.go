@@ -6,7 +6,6 @@ import (
 
 	"github.com/zulerne/go-mentor-junior/order/internal/api/common"
 	"github.com/zulerne/go-mentor-junior/order/internal/api/middleware"
-	"github.com/zulerne/go-mentor-junior/order/internal/api/response"
 	"github.com/zulerne/go-mentor-junior/order/internal/domain"
 )
 
@@ -47,9 +46,9 @@ func (h *Handler) getCart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cartItems := make([]response.CardItem, 0, len(cart.Items))
+	cartItems := make([]CartItem, 0, len(cart.Items))
 	for _, item := range cart.Items {
-		cartItems = append(cartItems, response.CardItem{
+		cartItems = append(cartItems, CartItem{
 			MenuItemID:     item.MenuItemID,
 			Name:           item.Name,
 			UnitPriceMinor: item.UnitPriceMinor,
@@ -63,7 +62,7 @@ func (h *Handler) getCart(w http.ResponseWriter, r *http.Request) {
 		log,
 		w,
 		http.StatusOK,
-		response.Cart{
+		CartResponse{
 			RestaurantID:  cart.RestaurantID,
 			Items:         cartItems,
 			SubtotalMinor: cart.SubtotalMinor,

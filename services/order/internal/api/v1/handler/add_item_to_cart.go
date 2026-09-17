@@ -8,7 +8,6 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/zulerne/go-mentor-junior/order/internal/api/common"
 	"github.com/zulerne/go-mentor-junior/order/internal/api/middleware"
-	"github.com/zulerne/go-mentor-junior/order/internal/api/response"
 )
 
 type addItemToCartRequest struct {
@@ -66,7 +65,7 @@ func (h *Handler) addItemToCart(w http.ResponseWriter, r *http.Request) {
 	// 	return
 	// }
 
-	common.RespondJSON(log, w, http.StatusOK, response.Cart{
-		Items: []response.CardItem{},
+	common.RespondJSON(log, w, http.StatusOK, CartResponse{
+		Items: []CartItem{},
 	})
 }

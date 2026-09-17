@@ -6,16 +6,15 @@ import (
 
 	"github.com/zulerne/go-mentor-junior/order/internal/api/common"
 	"github.com/zulerne/go-mentor-junior/order/internal/api/middleware"
-	"github.com/zulerne/go-mentor-junior/order/internal/api/response"
 	"github.com/zulerne/go-mentor-junior/order/internal/domain"
 )
 
-func (h *Handler) getOrder(w http.ResponseWriter, r *http.Request) {
-	op := "handler.getOrder"
+func (h *Handler) prepareRestaurantOrder(w http.ResponseWriter, r *http.Request) {
+	op := "handler.prepareRestaurantOrder"
 	log := h.log.With(
 		"op", op,
 		"request_id", middleware.GetRequestID(r.Context()),
-		"customer_id", middleware.GetCustomerID(r.Context()),
+		"restaurant_id", middleware.GetRestaurantID(r.Context()),
 	)
 
 	orderID := r.PathValue(orderIDKey)
@@ -37,9 +36,9 @@ func (h *Handler) getOrder(w http.ResponseWriter, r *http.Request) {
 		log,
 		w,
 		http.StatusOK,
-		response.Order{
-			Status:    string(domain.Pending),
-			Items:     []response.OrderItem{},
+		OrderResponse{
+			Status:    string(domain.Preparing),
+			Items:     []OrderItem{},
 			CreatedAt: date,
 			UpdatedAt: date,
 		},

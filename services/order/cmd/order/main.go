@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/zulerne/go-mentor-junior/order/internal/api/handler"
+	"github.com/zulerne/go-mentor-junior/order/internal/api/v1/handler"
 	"github.com/zulerne/go-mentor-junior/order/internal/config"
 	"github.com/zulerne/go-mentor-junior/order/internal/logger"
 	deliveryProveder "github.com/zulerne/go-mentor-junior/order/internal/provider/delivery/memory"

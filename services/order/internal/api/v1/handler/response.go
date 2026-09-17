@@ -1,8 +1,8 @@
-package response
+package handler
 
 // TODO (review): I don't sure about where these structs should be placed. And is it okay that these structs almost the same as domain structs?
 
-type CardItem struct {
+type CartItem struct {
 	MenuItemID     string `json:"menu_item_id"`
 	Name           string `json:"name"`
 	UnitPriceMinor int64  `json:"unit_price_minor"`
@@ -11,9 +11,9 @@ type CardItem struct {
 	Instructions   string `json:"instructions"`
 }
 
-type Cart struct {
+type CartResponse struct {
 	RestaurantID  *string    `json:"restaurant_id"`
-	Items         []CardItem `json:"items"`
+	Items         []CartItem `json:"items"`
 	SubtotalMinor int64      `json:"subtotal_minor"`
 	Currency      *string    `json:"currency"`
 }
@@ -26,7 +26,7 @@ type OrderItem struct {
 	Instructions   string `json:"instructions"`
 }
 
-type Order struct {
+type OrderResponse struct {
 	ID              string      `json:"id"`
 	CustomerID      string      `json:"customer_id"`
 	RestaurantID    string      `json:"restaurant_id"`
@@ -41,6 +41,6 @@ type Order struct {
 	UpdatedAt       string      `json:"updated_at"`
 }
 
-type AllOrders struct {
-	Orders []Order `json:"orders"`
+type AllOrdersResponse struct {
+	Orders []OrderResponse `json:"orders"`
 }
