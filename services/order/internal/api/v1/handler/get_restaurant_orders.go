@@ -12,10 +12,12 @@ import (
 
 func (h *Handler) getRestaurantOrders(w http.ResponseWriter, r *http.Request) {
 	op := "handler.getRestaurantOrders"
-	restaurantID := middleware.GetRestaurantID(r.Context())
+	requestID, _ := middleware.RequestIDFromContext(r.Context())
+	restaurantID, _ := middleware.RestaurantIDFromContext(r.Context())
+
 	log := h.log.With(
 		"op", op,
-		"request_id", middleware.GetRequestID(r.Context()),
+		"request_id", requestID,
 		"restaurant_id", restaurantID,
 	)
 

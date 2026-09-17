@@ -9,8 +9,8 @@ import (
 )
 
 const (
-	// RequestIDKey is the context key for request ID.
-	RequestIDKey ContextKey = "request_id"
+	// requestIDKey is the context key for request ID.
+	requestIDKey ContextKey = "request_id"
 	// RequestIDHeader is the header name for request ID.
 	requestIDHeader = "X-Request-ID"
 )
@@ -40,17 +40,17 @@ func RequestID(log *slog.Logger) Middleware {
 			// Set the request ID in response header
 			w.Header().Set(requestIDHeader, requestID)
 
-			ctx = context.WithValue(ctx, RequestIDKey, requestID)
+			ctx = WithRequestID(ctx, requestID)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
 }
 
-// GetRequestID extracts the request ID from context.
-// Returns empty string if not found.
-func GetRequestID(ctx context.Context) string {
-	if id, ok := ctx.Value(RequestIDKey).(string); ok {
-		return id
-	}
-	return ""
+func WithRequestID(ctx context.Context, id string) context.Context {
+	return context.WithValue(ctx, requestIDKey, id)
+}
+
+func RequestIDFromContext(ctx context.Context) (string, bool) {
+	id, ok := ctx.Value(requestIDKey).(string)
+	return id, ok
 }

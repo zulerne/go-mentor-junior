@@ -47,13 +47,14 @@ func Logger(log *slog.Logger) Middleware {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ww := newWrapResponseWriter(w)
 			start := time.Now()
+			requestID, _ := RequestIDFromContext(r.Context())
 			defer func() {
 				log.InfoContext(r.Context(), "HTTP",
 					"method", r.Method,
 					"path", r.URL.Path,
 					"status", ww.statusCode,
 					"duration", time.Since(start),
-					"request_id", GetRequestID(r.Context()))
+					"request_id", requestID)
 			}()
 			next.ServeHTTP(ww, r)
 		})

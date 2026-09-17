@@ -11,10 +11,12 @@ import (
 
 func (h *Handler) getCart(w http.ResponseWriter, r *http.Request) {
 	op := "handler.getCart"
-	customerID := middleware.GetCustomerID(r.Context())
+	requestID, _ := middleware.RequestIDFromContext(r.Context())
+	customerID, _ := middleware.CustomerIDFromContext(r.Context())
+
 	log := h.log.With(
 		"op", op,
-		"request_id", middleware.GetRequestID(r.Context()),
+		"request_id", requestID,
 		"customer_id", customerID,
 	)
 

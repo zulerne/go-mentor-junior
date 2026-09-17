@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	RestaurantIDKey ContextKey = "restaurant_id"
+	restaurantIDKey ContextKey = "restaurant_id"
 
 	restaurantIDHeader = "X-Restaurant-ID"
 )
@@ -32,15 +32,17 @@ func RestaurantID(log *slog.Logger) Middleware {
 				return
 			}
 
-			ctx := context.WithValue(r.Context(), RestaurantIDKey, h)
+			ctx := WithRestaurantID(r.Context(), h)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
 }
 
-func GetRestaurantID(ctx context.Context) string {
-	if id, ok := ctx.Value(RestaurantIDKey).(string); ok {
-		return id
-	}
-	return ""
+func WithRestaurantID(ctx context.Context, id string) context.Context {
+	return context.WithValue(ctx, restaurantIDKey, id)
+}
+
+func RestaurantIDFromContext(ctx context.Context) (string, bool) {
+	id, ok := ctx.Value(restaurantIDKey).(string)
+	return id, ok
 }

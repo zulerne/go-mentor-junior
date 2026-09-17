@@ -18,10 +18,13 @@ type rejectRestaurantOrderRequest struct {
 
 func (h *Handler) rejectRestaurantOrder(w http.ResponseWriter, r *http.Request) {
 	op := "handler.rejectRestaurantOrder"
+	requestID, _ := middleware.RequestIDFromContext(r.Context())
+	restaurantID, _ := middleware.RestaurantIDFromContext(r.Context())
+
 	log := h.log.With(
 		"op", op,
-		"request_id", middleware.GetRequestID(r.Context()),
-		"restaurant_id", middleware.GetRestaurantID(r.Context()),
+		"request_id", requestID,
+		"restaurant_id", restaurantID,
 	)
 
 	var req rejectRestaurantOrderRequest

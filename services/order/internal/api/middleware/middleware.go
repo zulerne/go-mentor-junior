@@ -5,8 +5,8 @@ import (
 	"slices"
 )
 
-// ContextKey is a custom type for context keys to avoid collisions.
-type ContextKey string
+// contextKey is a custom type for context keys to avoid collisions.
+type contextKey string
 
 type Middleware func(http.Handler) http.Handler
 

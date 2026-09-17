@@ -9,10 +9,13 @@ import (
 
 func (h *Handler) removeItemFromCart(w http.ResponseWriter, r *http.Request) {
 	op := "handler.removeItemFromCart"
+	requestID, _ := middleware.RequestIDFromContext(r.Context())
+	customerID, _ := middleware.CustomerIDFromContext(r.Context())
+
 	log := h.log.With(
 		"op", op,
-		"request_id", middleware.GetRequestID(r.Context()),
-		"customer_id", middleware.GetCustomerID(r.Context()),
+		"request_id", requestID,
+		"customer_id", customerID,
 	)
 
 	menuItemID := r.PathValue(menuItemIDKey)

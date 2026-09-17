@@ -11,7 +11,7 @@ import (
 // TODO (review): Do I need these middleware(customer/restaurant ids) or should I extract them manually from the request?
 
 const (
-	CustomerIDKey ContextKey = "customer_id"
+	customerIDKey ContextKey = "customer_id"
 
 	customerIDHeader = "X-Customer-ID"
 )
@@ -36,15 +36,17 @@ func CustomerID(log *slog.Logger) Middleware {
 				return
 			}
 
-			ctx := context.WithValue(r.Context(), CustomerIDKey, h)
+			ctx := WithCustomerID(r.Context(), h)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
 }
 
-func GetCustomerID(ctx context.Context) string {
-	if id, ok := ctx.Value(CustomerIDKey).(string); ok {
-		return id
-	}
-	return ""
+func WithCustomerID(ctx context.Context, id string) context.Context {
+	return context.WithValue(ctx, customerIDKey, id)
+}
+
+func CustomerIDFromContext(ctx context.Context) (string, bool) {
+	id, ok := ctx.Value(customerIDKey).(string)
+	return id, ok
 }
