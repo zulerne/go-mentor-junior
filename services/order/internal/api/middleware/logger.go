@@ -6,6 +6,7 @@ import (
 	"time"
 )
 
+// TODO: Use library for this feature
 // responseWriter wraps [http.ResponseWriter] to capture the status code.
 type responseWriter struct {
 	http.ResponseWriter
@@ -22,17 +23,16 @@ func newWrapResponseWriter(w http.ResponseWriter) *responseWriter {
 }
 
 func (rw *responseWriter) WriteHeader(code int) {
-	if !rw.written {
-		rw.statusCode = code
-		rw.written = true
+	if rw.written {
+		return
 	}
+	rw.statusCode = code
+	rw.written = true
 	rw.ResponseWriter.WriteHeader(code)
 }
 
 func (rw *responseWriter) Write(b []byte) (int, error) {
-	if !rw.written {
-		rw.written = true
-	}
+	rw.written = true
 	return rw.ResponseWriter.Write(b)
 }
 
@@ -55,7 +55,7 @@ func Logger(log *slog.Logger) Middleware {
 					"duration", time.Since(start),
 					"request_id", GetRequestID(r.Context()))
 			}()
-			next.ServeHTTP(w, r)
+			next.ServeHTTP(ww, r)
 		})
 	}
 }

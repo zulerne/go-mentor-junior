@@ -15,6 +15,7 @@ const (
 	requestIDHeader = "X-Request-ID"
 )
 
+// TODO: Use standard library for tracing (https://www.cncf.io/projects)
 type requestIDGenerator struct {
 	atomic.Uint64
 }
