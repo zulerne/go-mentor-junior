@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	restaurantIDKey ContextKey = "restaurant_id"
+	restaurantIDKey contextKey = "restaurant_id"
 
 	restaurantIDHeader = "X-Restaurant-ID"
 )

@@ -11,7 +11,7 @@ import (
 // TODO (review): Do I need these middleware(customer/restaurant ids) or should I extract them manually from the request?
 
 const (
-	customerIDKey ContextKey = "customer_id"
+	customerIDKey contextKey = "customer_id"
 
 	customerIDHeader = "X-Customer-ID"
 )

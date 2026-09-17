@@ -10,7 +10,7 @@ import (
 
 const (
 	// requestIDKey is the context key for request ID.
-	requestIDKey ContextKey = "request_id"
+	requestIDKey contextKey = "request_id"
 	// RequestIDHeader is the header name for request ID.
 	requestIDHeader = "X-Request-ID"
 )
