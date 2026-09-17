@@ -30,7 +30,7 @@ func (h *Handler) removeItemFromCart(w http.ResponseWriter, r *http.Request) {
 	log.DebugContext(r.Context(), "menu item id parsed", "menu_item_id", menuItemID)
 
 	common.RespondJSON(
-		h.log,
+		log,
 		w,
 		http.StatusNoContent,
 		nil,

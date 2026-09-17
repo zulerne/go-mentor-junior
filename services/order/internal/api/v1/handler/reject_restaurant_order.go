@@ -31,7 +31,7 @@ func (h *Handler) rejectRestaurantOrder(w http.ResponseWriter, r *http.Request) 
 		msg := "failed to decode request"
 		log.ErrorContext(r.Context(), msg, "error", err)
 		common.RespondJSON(
-			h.log,
+			log,
 			w,
 			http.StatusBadRequest,
 			common.NewBaseError(msg),
@@ -57,7 +57,7 @@ func (h *Handler) rejectRestaurantOrder(w http.ResponseWriter, r *http.Request) 
 
 		log.ErrorContext(r.Context(), "failed to validate request", "error", err)
 		common.RespondJSON(
-			h.log,
+			log,
 			w,
 			http.StatusInternalServerError,
 			common.NewBaseError("server error"),
@@ -67,7 +67,7 @@ func (h *Handler) rejectRestaurantOrder(w http.ResponseWriter, r *http.Request) 
 
 	date := time.Date(2026, time.September, 1, 12, 0, 0, 0, time.UTC).Format(time.RFC3339)
 	common.RespondJSON(
-		h.log,
+		log,
 		w,
 		http.StatusOK,
 		OrderResponse{

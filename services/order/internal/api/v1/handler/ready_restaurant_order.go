@@ -22,7 +22,7 @@ func (h *Handler) readyRestaurantOrder(w http.ResponseWriter, r *http.Request) {
 		msg := common.OrderIDRequiredErrorCode
 		log.ErrorContext(r.Context(), msg, "error", orderID)
 		common.RespondJSON(
-			h.log,
+			log,
 			w,
 			http.StatusBadRequest,
 			common.NewBaseError(msg),
