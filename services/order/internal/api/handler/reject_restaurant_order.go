@@ -13,7 +13,7 @@ import (
 )
 
 type rejectRestaurantOrderRequest struct {
-	Reason string `json:"reason"`
+	Reason string `json:"reason" validate:"required"`
 }
 
 func (h *Handler) rejectRestaurantOrder(w http.ResponseWriter, r *http.Request) {
