@@ -9,8 +9,6 @@ import (
 	"github.com/zulerne/go-mentor-junior/order/internal/api/common"
 	"github.com/zulerne/go-mentor-junior/order/internal/api/middleware"
 	"github.com/zulerne/go-mentor-junior/order/internal/domain"
-	"github.com/zulerne/go-mentor-junior/order/internal/services/customer"
-	"github.com/zulerne/go-mentor-junior/order/internal/services/restaurant"
 )
 
 const (
@@ -34,7 +32,7 @@ type Handler struct {
 	log        *slog.Logger
 }
 
-func New(cust *customer.Service, rest *restaurant.Service, validator *validator.Validate, log *slog.Logger) *Handler {
+func New(cust Customer, rest Restaurant, validator *validator.Validate, log *slog.Logger) *Handler {
 	log = log.With("component", "handler")
 	h := &Handler{
 		customer:   cust,
