@@ -20,7 +20,7 @@ func (h *Handler) cancelOrder(w http.ResponseWriter, r *http.Request) {
 	orderID := r.PathValue(orderIDKey)
 	if orderID == "" {
 		msg := response.OrderIDRequiredErrorCode
-		log.DebugContext(r.Context(), msg, "error", orderID)
+		log.ErrorContext(r.Context(), msg)
 		h.respondJSON(w, http.StatusBadRequest, response.NewBaseError(msg))
 		return
 	}

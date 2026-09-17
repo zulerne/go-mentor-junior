@@ -18,7 +18,7 @@ func (h *Handler) removeItemFromCart(w http.ResponseWriter, r *http.Request) {
 	menuItemID := r.PathValue(menuItemIDKey)
 	if menuItemID == "" {
 		msg := "menu item id is required"
-		log.DebugContext(r.Context(), msg, "error", menuItemID)
+		log.ErrorContext(r.Context(), msg)
 		h.respondJSON(w, http.StatusBadRequest, response.NewBaseError(msg))
 		return
 	}

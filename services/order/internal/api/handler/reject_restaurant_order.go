@@ -27,7 +27,7 @@ func (h *Handler) rejectRestaurantOrder(w http.ResponseWriter, r *http.Request) 
 	var req rejectRestaurantOrderRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		msg := "failed to decode request"
-		log.DebugContext(r.Context(), msg, "error", err)
+		log.ErrorContext(r.Context(), msg, "error", err)
 		h.respondJSON(w, http.StatusBadRequest, response.NewBaseError(msg))
 		return
 	}
@@ -36,7 +36,7 @@ func (h *Handler) rejectRestaurantOrder(w http.ResponseWriter, r *http.Request) 
 
 	if err := h.validator.Struct(req); err != nil {
 		msg := response.ValidationErrorCode
-		log.DebugContext(r.Context(), msg, "error", err)
+		log.ErrorContext(r.Context(), msg, "error", err)
 
 		if validationErr, ok := errors.AsType[validator.ValidationErrors](err); ok {
 			h.respondJSON(w, http.StatusBadRequest, response.NewValidationError(validationErr))
