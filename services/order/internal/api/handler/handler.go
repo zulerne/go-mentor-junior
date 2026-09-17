@@ -2,11 +2,11 @@ package handler
 
 import (
 	"context"
-	"encoding/json"
 	"log/slog"
 	"net/http"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/zulerne/go-mentor-junior/order/internal/api/common"
 	"github.com/zulerne/go-mentor-junior/order/internal/api/middleware"
 	"github.com/zulerne/go-mentor-junior/order/internal/domain"
 	"github.com/zulerne/go-mentor-junior/order/internal/services/customer"
@@ -93,23 +93,20 @@ func (h *Handler) Routes() http.Handler {
 
 // TODO (review): Is it okay to have helper functions like these below?
 
-func (h *Handler) respondJSON(w http.ResponseWriter, status int, v any) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-
-	if v == nil {
-		return
-	}
-
-	if err := json.NewEncoder(w).Encode(v); err != nil {
-		h.log.Error("failed to encode response", "error", err)
-	}
-}
-
 func (h *Handler) livez(w http.ResponseWriter, _ *http.Request) {
-	h.respondJSON(w, http.StatusOK, nil)
+	common.RespondJSON(
+		h.log,
+		w,
+		http.StatusOK,
+		nil,
+	)
 }
 
 func (h *Handler) readyz(w http.ResponseWriter, _ *http.Request) {
-	h.respondJSON(w, http.StatusOK, nil)
+	common.RespondJSON(
+		h.log,
+		w,
+		http.StatusOK,
+		nil,
+	)
 }

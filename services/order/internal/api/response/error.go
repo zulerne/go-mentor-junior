@@ -12,6 +12,7 @@ type ErrorCode = string
 const (
 	BaseErrorCode            ErrorCode = "BASE_ERROR"
 	ValidationErrorCode      ErrorCode = "VALIDATION_ERROR"
+	BadRequestErrorCode      ErrorCode = "BAD_REQUEST"
 	OrderIDRequiredErrorCode ErrorCode = "ORDER_ID_REQUIRED"
 
 	CustomerNotFoundErrorCode             ErrorCode = "CUSTOMER_NOT_FOUND"

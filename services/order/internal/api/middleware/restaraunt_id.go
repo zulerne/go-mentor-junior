@@ -4,6 +4,9 @@ import (
 	"context"
 	"log/slog"
 	"net/http"
+
+	"github.com/zulerne/go-mentor-junior/order/internal/api/common"
+	"github.com/zulerne/go-mentor-junior/order/internal/api/response"
 )
 
 const (
@@ -20,12 +23,13 @@ func RestaurantID(log *slog.Logger) Middleware {
 			h := r.Header.Get(restaurantIDHeader)
 
 			if h == "" {
-				log.WarnContext(r.Context(), "X-Restaurant-ID header is missing")
-				w.WriteHeader(http.StatusBadRequest)
-				_, err := w.Write([]byte("X-Restaurant-ID header is required"))
-				if err != nil {
-					log.ErrorContext(r.Context(), "Failed to write response", "error", err)
-				}
+				log.ErrorContext(r.Context(), "X-Restaurant-ID header is missing")
+				common.RespondJSON(
+					log,
+					w,
+					http.StatusBadRequest,
+					response.NewError(response.BadRequestErrorCode, "X-Restaurant-ID header is required", nil),
+				)
 				return
 			}
 

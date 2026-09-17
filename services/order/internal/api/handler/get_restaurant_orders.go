@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/zulerne/go-mentor-junior/order/internal/api/common"
 	"github.com/zulerne/go-mentor-junior/order/internal/api/middleware"
 	"github.com/zulerne/go-mentor-junior/order/internal/api/response"
 	"github.com/zulerne/go-mentor-junior/order/internal/domain"
@@ -24,7 +25,8 @@ func (h *Handler) getRestaurantOrders(w http.ResponseWriter, r *http.Request) {
 	orders, err := h.restaurant.GetOrders(r.Context(), restaurantID)
 	if err != nil {
 		if errors.Is(err, domain.ErrNotFound) {
-			h.respondJSON(
+			common.RespondJSON(
+				log,
 				w,
 				http.StatusNotFound,
 				response.NewError(response.RestaurantNotFoundErrorCode, "restaurant not found", nil),
@@ -33,7 +35,12 @@ func (h *Handler) getRestaurantOrders(w http.ResponseWriter, r *http.Request) {
 		}
 		msg := "failed to get orders"
 		log.ErrorContext(r.Context(), msg, "error", err)
-		h.respondJSON(w, http.StatusInternalServerError, response.NewBaseError(msg))
+		common.RespondJSON(
+			log,
+			w,
+			http.StatusInternalServerError,
+			response.NewBaseError(msg),
+		)
 		return
 	}
 
@@ -71,7 +78,11 @@ func (h *Handler) getRestaurantOrders(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	h.respondJSON(w, http.StatusOK, response.AllOrders{
-		Orders: orderResponses,
-	})
+	common.RespondJSON(
+		log,
+		w,
+		http.StatusOK,
+		response.AllOrders{
+			Orders: orderResponses,
+		})
 }

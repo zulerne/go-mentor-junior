@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/zulerne/go-mentor-junior/order/internal/api/common"
 	"github.com/zulerne/go-mentor-junior/order/internal/api/middleware"
 	"github.com/zulerne/go-mentor-junior/order/internal/api/response"
 )
@@ -28,7 +29,7 @@ func (h *Handler) addItemToCart(w http.ResponseWriter, r *http.Request) {
 	if menuItemID == "" {
 		msg := "menu item id is required"
 		log.ErrorContext(r.Context(), msg)
-		h.respondJSON(w, http.StatusBadRequest, response.NewBaseError(msg))
+		common.RespondJSON(log, w, http.StatusBadRequest, response.NewBaseError(msg))
 		return
 	}
 	log.DebugContext(r.Context(), "menu item id parsed", "menu_item_id", menuItemID)
@@ -37,7 +38,7 @@ func (h *Handler) addItemToCart(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		msg := "failed to decode request"
 		log.ErrorContext(r.Context(), msg, "error", err)
-		h.respondJSON(w, http.StatusBadRequest, response.NewBaseError(msg))
+		common.RespondJSON(log, w, http.StatusBadRequest, response.NewBaseError(msg))
 		return
 	}
 
@@ -48,12 +49,12 @@ func (h *Handler) addItemToCart(w http.ResponseWriter, r *http.Request) {
 		log.ErrorContext(r.Context(), msg, "error", err)
 
 		if validationErr, ok := errors.AsType[validator.ValidationErrors](err); ok {
-			h.respondJSON(w, http.StatusBadRequest, response.NewValidationError(validationErr))
+			common.RespondJSON(log, w, http.StatusBadRequest, response.NewValidationError(validationErr))
 			return
 		}
 
 		log.ErrorContext(r.Context(), "failed to validate request", "error", err)
-		h.respondJSON(w, http.StatusInternalServerError, response.NewBaseError("server error"))
+		common.RespondJSON(log, w, http.StatusInternalServerError, response.NewBaseError("server error"))
 		return
 	}
 
@@ -65,7 +66,7 @@ func (h *Handler) addItemToCart(w http.ResponseWriter, r *http.Request) {
 	// 	return
 	// }
 
-	h.respondJSON(w, http.StatusOK, response.Cart{
+	common.RespondJSON(log, w, http.StatusOK, response.Cart{
 		Items: []response.CardItem{},
 	})
 }

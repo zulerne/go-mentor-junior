@@ -3,6 +3,7 @@ package handler
 import (
 	"net/http"
 
+	"github.com/zulerne/go-mentor-junior/order/internal/api/common"
 	"github.com/zulerne/go-mentor-junior/order/internal/api/middleware"
 	"github.com/zulerne/go-mentor-junior/order/internal/api/response"
 )
@@ -19,10 +20,20 @@ func (h *Handler) removeItemFromCart(w http.ResponseWriter, r *http.Request) {
 	if menuItemID == "" {
 		msg := "menu item id is required"
 		log.ErrorContext(r.Context(), msg)
-		h.respondJSON(w, http.StatusBadRequest, response.NewBaseError(msg))
+		common.RespondJSON(
+			log,
+			w,
+			http.StatusBadRequest,
+			response.NewBaseError(msg),
+		)
 		return
 	}
 	log.DebugContext(r.Context(), "menu item id parsed", "menu_item_id", menuItemID)
 
-	h.respondJSON(w, http.StatusNoContent, nil)
+	common.RespondJSON(
+		h.log,
+		w,
+		http.StatusNoContent,
+		nil,
+	)
 }

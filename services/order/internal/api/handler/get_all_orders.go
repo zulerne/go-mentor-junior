@@ -3,6 +3,7 @@ package handler
 import (
 	"net/http"
 
+	"github.com/zulerne/go-mentor-junior/order/internal/api/common"
 	"github.com/zulerne/go-mentor-junior/order/internal/api/middleware"
 	"github.com/zulerne/go-mentor-junior/order/internal/api/response"
 )
@@ -25,7 +26,7 @@ func (h *Handler) getAllOrders(w http.ResponseWriter, r *http.Request) {
 	//
 	log.DebugContext(r.Context(), "getting all orders")
 
-	h.respondJSON(w, http.StatusOK, response.AllOrders{
+	common.RespondJSON(log, w, http.StatusOK, response.AllOrders{
 		Orders: []response.Order{},
 	})
 }

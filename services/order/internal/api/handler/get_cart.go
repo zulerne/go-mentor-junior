@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/zulerne/go-mentor-junior/order/internal/api/common"
 	"github.com/zulerne/go-mentor-junior/order/internal/api/middleware"
 	"github.com/zulerne/go-mentor-junior/order/internal/api/response"
 	"github.com/zulerne/go-mentor-junior/order/internal/domain"
@@ -26,7 +27,8 @@ func (h *Handler) getCart(w http.ResponseWriter, r *http.Request) {
 	)
 	if err != nil {
 		if errors.Is(err, domain.ErrNotFound) {
-			h.respondJSON(
+			common.RespondJSON(
+				log,
 				w,
 				http.StatusNotFound,
 				response.NewError(response.CustomerNotFoundErrorCode, "customer not found", nil),
@@ -36,7 +38,12 @@ func (h *Handler) getCart(w http.ResponseWriter, r *http.Request) {
 
 		msg := "failed to get cart"
 		log.ErrorContext(r.Context(), msg, "error", err)
-		h.respondJSON(w, http.StatusInternalServerError, response.NewBaseError(msg))
+		common.RespondJSON(
+			log,
+			w,
+			http.StatusInternalServerError,
+			response.NewBaseError(msg),
+		)
 		return
 	}
 
@@ -52,10 +59,15 @@ func (h *Handler) getCart(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	h.respondJSON(w, http.StatusOK, response.Cart{
-		RestaurantID:  cart.RestaurantID,
-		Items:         cartItems,
-		SubtotalMinor: cart.SubtotalMinor,
-		Currency:      cart.Currency,
-	})
+	common.RespondJSON(
+		log,
+		w,
+		http.StatusOK,
+		response.Cart{
+			RestaurantID:  cart.RestaurantID,
+			Items:         cartItems,
+			SubtotalMinor: cart.SubtotalMinor,
+			Currency:      cart.Currency,
+		},
+	)
 }

@@ -3,6 +3,9 @@ package middleware
 import (
 	"log/slog"
 	"net/http"
+
+	"github.com/zulerne/go-mentor-junior/order/internal/api/common"
+	"github.com/zulerne/go-mentor-junior/order/internal/api/response"
 )
 
 func Recoverer(log *slog.Logger) Middleware {
@@ -12,7 +15,12 @@ func Recoverer(log *slog.Logger) Middleware {
 			defer func() {
 				if err := recover(); err != nil {
 					log.ErrorContext(r.Context(), "recovered from panic", "error", err)
-					http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+					common.RespondJSON(
+						log,
+						w,
+						http.StatusInternalServerError,
+						response.NewError(response.BaseErrorCode, "internal server error", nil),
+					)
 				}
 			}()
 			next.ServeHTTP(w, r)
