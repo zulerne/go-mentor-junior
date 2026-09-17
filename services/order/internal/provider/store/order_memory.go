@@ -1,4 +1,4 @@
-package memory
+package store
 
 import (
 	"context"
@@ -7,11 +7,11 @@ import (
 	"github.com/zulerne/go-mentor-junior/order/internal/domain"
 )
 
-type OrderStore struct {
+type MemoryOrderStore struct {
 	data map[string]domain.Order
 }
 
-func NewOrderStore() *OrderStore {
+func NewMemoryOrderStore() *MemoryOrderStore {
 	data := make(map[string]domain.Order)
 
 	date := time.Date(2026, time.September, 1, 12, 0, 0, 0, time.UTC)
@@ -30,12 +30,12 @@ func NewOrderStore() *OrderStore {
 		CreatedAt:       date,
 		UpdatedAt:       date,
 	}
-	return &OrderStore{
+	return &MemoryOrderStore{
 		data: data,
 	}
 }
 
-func (s *OrderStore) Find(_ context.Context, id string) (domain.Order, error) {
+func (s *MemoryOrderStore) Find(_ context.Context, id string) (domain.Order, error) {
 	order, ok := s.data[id]
 	if !ok {
 		return domain.Order{}, nil
@@ -43,7 +43,7 @@ func (s *OrderStore) Find(_ context.Context, id string) (domain.Order, error) {
 	return order, nil
 }
 
-func (s *OrderStore) FindByRestaurant(_ context.Context, restaurantID string) ([]domain.Order, error) {
+func (s *MemoryOrderStore) FindByRestaurant(_ context.Context, restaurantID string) ([]domain.Order, error) {
 	var orders []domain.Order
 	for _, order := range s.data {
 		if order.RestaurantID == restaurantID {

@@ -1,4 +1,4 @@
-package memory
+package store
 
 import (
 	"context"
@@ -8,13 +8,13 @@ import (
 	"github.com/zulerne/go-mentor-junior/order/internal/domain"
 )
 
-type CartStore struct {
+type MemoryCartStore struct {
 	// data is a map of cart IDs to cart data
 	data map[string]domain.Cart
 	mu   sync.RWMutex
 }
 
-func NewCartStore() *CartStore {
+func NewMemoryCartStore() *MemoryCartStore {
 	data := make(map[string]domain.Cart)
 
 	restaurantID := "restaurant_id_1"
@@ -36,12 +36,12 @@ func NewCartStore() *CartStore {
 		Currency:      &currency,
 	}
 
-	return &CartStore{
+	return &MemoryCartStore{
 		data: data,
 	}
 }
 
-func (s *CartStore) AddItem(
+func (s *MemoryCartStore) AddItem(
 	_ context.Context,
 	restaurantID, customerID string,
 	menuItem domain.MenuItem,
@@ -72,7 +72,7 @@ func (s *CartStore) AddItem(
 	return nil
 }
 
-func (s *CartStore) FindCart(_ context.Context, customerID string) (domain.Cart, error) {
+func (s *MemoryCartStore) FindCart(_ context.Context, customerID string) (domain.Cart, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 

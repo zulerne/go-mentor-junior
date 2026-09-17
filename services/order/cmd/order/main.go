@@ -15,9 +15,9 @@ import (
 	"github.com/zulerne/go-mentor-junior/order/internal/api/v1/handler"
 	"github.com/zulerne/go-mentor-junior/order/internal/config"
 	"github.com/zulerne/go-mentor-junior/order/internal/logger"
-	deliveryProveder "github.com/zulerne/go-mentor-junior/order/internal/provider/delivery/memory"
-	restaurantProvider "github.com/zulerne/go-mentor-junior/order/internal/provider/restaurant/memory"
-	store "github.com/zulerne/go-mentor-junior/order/internal/provider/store/memory"
+	deliveryProvider "github.com/zulerne/go-mentor-junior/order/internal/provider/delivery"
+	restaurantProvider "github.com/zulerne/go-mentor-junior/order/internal/provider/restaurant"
+	store "github.com/zulerne/go-mentor-junior/order/internal/provider/store"
 	"github.com/zulerne/go-mentor-junior/order/internal/services/customer"
 	"github.com/zulerne/go-mentor-junior/order/internal/services/restaurant"
 )
@@ -39,12 +39,12 @@ func main() {
 
 	log := logger.New(cfg.Env)
 
-	orderStore := store.NewOrderStore()
-	cartStore := store.NewCartStore()
-	restaurantProvider := restaurantProvider.NewRestaurantProvider()
+	orderStore := store.NewMemoryOrderStore()
+	cartStore := store.NewMemoryCartStore()
+	restaurantProvider := restaurantProvider.NewMemoryProvider()
 
 	customer := customer.New(orderStore, cartStore, restaurantProvider, log)
-	restaurant := restaurant.New(orderStore, deliveryProveder.NewDeliveryProvider(), log)
+	restaurant := restaurant.New(orderStore, deliveryProvider.NewStubProvider(), log)
 
 	h := handler.New(customer, restaurant, validate, log)
 	srv := &http.Server{

@@ -1,4 +1,4 @@
-package memory
+package restaurant
 
 import (
 	"context"
@@ -6,11 +6,11 @@ import (
 	"github.com/zulerne/go-mentor-junior/order/internal/domain"
 )
 
-type RestaurantProvider struct {
+type MemoryProvider struct {
 	data map[string]map[string]domain.MenuItem
 }
 
-func NewRestaurantProvider() *RestaurantProvider {
+func NewMemoryProvider() *MemoryProvider {
 	menuItems := map[string]map[string]domain.MenuItem{}
 	menuItems["restaurant-1"] = map[string]domain.MenuItem{
 		"menu-item-1": {
@@ -30,10 +30,10 @@ func NewRestaurantProvider() *RestaurantProvider {
 			Available:   true,
 		},
 	}
-	return &RestaurantProvider{data: menuItems}
+	return &MemoryProvider{data: menuItems}
 }
 
-func (r *RestaurantProvider) Find(_ context.Context, restaurantID string, menuItemID string) (domain.MenuItem, error) {
+func (r *MemoryProvider) Find(_ context.Context, restaurantID string, menuItemID string) (domain.MenuItem, error) {
 	items, ok := r.data[restaurantID]
 	if !ok {
 		return domain.MenuItem{}, nil
