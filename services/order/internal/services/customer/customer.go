@@ -15,7 +15,8 @@ type CartStore interface {
 	FindCart(ctx context.Context, customerID string) (domain.Cart, error)
 	AddItem(
 		ctx context.Context,
-		restaurantID, customerID string,
+		restaurantID string,
+		customerID string,
 		menuItem domain.MenuItem,
 		quantity int,
 		instructions string,
@@ -23,7 +24,7 @@ type CartStore interface {
 }
 
 type RestaurantProvider interface {
-	Find(ctx context.Context, restaurantID, menuItemID string) (domain.MenuItem, error)
+	Find(ctx context.Context, restaurantID string, menuItemID string) (domain.MenuItem, error)
 }
 
 type Service struct {

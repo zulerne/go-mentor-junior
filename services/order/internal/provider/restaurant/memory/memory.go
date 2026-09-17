@@ -33,7 +33,7 @@ func NewRestaurantProvider() *RestaurantProvider {
 	return &RestaurantProvider{data: menuItems}
 }
 
-func (r *RestaurantProvider) Find(_ context.Context, restaurantID, menuItemID string) (domain.MenuItem, error) {
+func (r *RestaurantProvider) Find(_ context.Context, restaurantID string, menuItemID string) (domain.MenuItem, error) {
 	items, ok := r.data[restaurantID]
 	if !ok {
 		return domain.MenuItem{}, nil
