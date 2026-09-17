@@ -34,7 +34,9 @@ func (h *Handler) addItemToCart(w http.ResponseWriter, r *http.Request) {
 	log.DebugContext(r.Context(), "menu item id parsed", "menu_item_id", menuItemID)
 
 	var req addItemToCartRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(&req); err != nil {
 		msg := "failed to decode request"
 		log.ErrorContext(r.Context(), msg, "error", err)
 		common.RespondJSON(log, w, http.StatusBadRequest, common.NewBaseError(msg))

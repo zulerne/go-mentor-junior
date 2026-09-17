@@ -25,7 +25,9 @@ func (h *Handler) createOrder(w http.ResponseWriter, r *http.Request) {
 	)
 
 	var req createOrderRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(&req); err != nil {
 		msg := "failed to decode request body"
 		log.ErrorContext(r.Context(), msg, "error", err)
 		common.RespondJSON(log, w, http.StatusBadRequest, common.NewBaseError(msg))
