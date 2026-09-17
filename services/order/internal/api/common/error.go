@@ -47,6 +47,9 @@ type ErrorData struct {
 }
 
 func NewError(code ErrorCode, msg string, details any) ErrorResponse {
+	if details == nil {
+		details = map[string]any{}
+	}
 	return ErrorResponse{
 		ErrorData: ErrorData{
 			Code:    code,
