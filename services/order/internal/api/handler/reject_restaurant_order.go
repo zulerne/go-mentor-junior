@@ -33,7 +33,7 @@ func (h *Handler) rejectRestaurantOrder(w http.ResponseWriter, r *http.Request) 
 			h.log,
 			w,
 			http.StatusBadRequest,
-			response.NewBaseError(msg),
+			common.NewBaseError(msg),
 		)
 		return
 	}
@@ -41,7 +41,7 @@ func (h *Handler) rejectRestaurantOrder(w http.ResponseWriter, r *http.Request) 
 	log.DebugContext(r.Context(), "request received", "reason", req.Reason)
 
 	if err := h.validator.Struct(req); err != nil {
-		msg := response.ValidationErrorCode
+		msg := common.ValidationErrorCode
 		log.ErrorContext(r.Context(), msg, "error", err)
 
 		if validationErr, ok := errors.AsType[validator.ValidationErrors](err); ok {
@@ -49,7 +49,7 @@ func (h *Handler) rejectRestaurantOrder(w http.ResponseWriter, r *http.Request) 
 				log,
 				w,
 				http.StatusBadRequest,
-				response.NewValidationError(validationErr),
+				common.NewValidationError(validationErr),
 			)
 			return
 		}
@@ -59,7 +59,7 @@ func (h *Handler) rejectRestaurantOrder(w http.ResponseWriter, r *http.Request) 
 			h.log,
 			w,
 			http.StatusInternalServerError,
-			response.NewBaseError("server error"),
+			common.NewBaseError("server error"),
 		)
 		return
 	}

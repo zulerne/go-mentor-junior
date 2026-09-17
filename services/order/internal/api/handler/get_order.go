@@ -20,13 +20,13 @@ func (h *Handler) getOrder(w http.ResponseWriter, r *http.Request) {
 
 	orderID := r.PathValue(orderIDKey)
 	if orderID == "" {
-		msg := response.OrderIDRequiredErrorCode
+		msg := common.OrderIDRequiredErrorCode
 		log.ErrorContext(r.Context(), msg)
 		common.RespondJSON(
 			log,
 			w,
 			http.StatusBadRequest,
-			response.NewBaseError(msg),
+			common.NewBaseError(msg),
 		)
 		return
 	}

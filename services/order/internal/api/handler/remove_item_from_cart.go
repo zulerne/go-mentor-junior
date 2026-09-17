@@ -5,7 +5,6 @@ import (
 
 	"github.com/zulerne/go-mentor-junior/order/internal/api/common"
 	"github.com/zulerne/go-mentor-junior/order/internal/api/middleware"
-	"github.com/zulerne/go-mentor-junior/order/internal/api/response"
 )
 
 func (h *Handler) removeItemFromCart(w http.ResponseWriter, r *http.Request) {
@@ -24,7 +23,7 @@ func (h *Handler) removeItemFromCart(w http.ResponseWriter, r *http.Request) {
 			log,
 			w,
 			http.StatusBadRequest,
-			response.NewBaseError(msg),
+			common.NewBaseError(msg),
 		)
 		return
 	}

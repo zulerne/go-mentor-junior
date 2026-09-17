@@ -1,4 +1,4 @@
-package response
+package common
 
 import (
 	"fmt"
@@ -36,7 +36,7 @@ const (
 	DependencyUnavailableErrorCode        ErrorCode = "DEPENDENCY_UNAVAILABLE"
 )
 
-type Error struct {
+type ErrorResponse struct {
 	ErrorData ErrorData `json:"error"`
 }
 
@@ -46,8 +46,8 @@ type ErrorData struct {
 	Details any    `json:"details"`
 }
 
-func NewError(code ErrorCode, msg string, details any) Error {
-	return Error{
+func NewError(code ErrorCode, msg string, details any) ErrorResponse {
+	return ErrorResponse{
 		ErrorData: ErrorData{
 			Code:    code,
 			Message: msg,
@@ -56,8 +56,8 @@ func NewError(code ErrorCode, msg string, details any) Error {
 	}
 }
 
-func NewBaseError(msg string) Error {
-	return Error{
+func NewBaseError(msg string) ErrorResponse {
+	return ErrorResponse{
 		ErrorData: ErrorData{
 			Code:    BaseErrorCode,
 			Message: msg,
@@ -67,7 +67,7 @@ func NewBaseError(msg string) Error {
 }
 
 // NewValidationError creates a new validation error from the given validator.ValidationErrors ().
-func NewValidationError(errs validator.ValidationErrors) Error {
+func NewValidationError(errs validator.ValidationErrors) ErrorResponse {
 	var msgs []string
 
 	for _, err := range errs {
@@ -79,7 +79,7 @@ func NewValidationError(errs validator.ValidationErrors) Error {
 		}
 	}
 
-	return Error{
+	return ErrorResponse{
 		ErrorData: ErrorData{
 			Code:    ValidationErrorCode,
 			Message: strings.Join(msgs, ", "),

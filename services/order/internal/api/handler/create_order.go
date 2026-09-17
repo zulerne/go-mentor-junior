@@ -29,23 +29,23 @@ func (h *Handler) createOrder(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		msg := "failed to decode request body"
 		log.ErrorContext(r.Context(), msg, "error", err)
-		common.RespondJSON(log, w, http.StatusBadRequest, response.NewBaseError(msg))
+		common.RespondJSON(log, w, http.StatusBadRequest, common.NewBaseError(msg))
 		return
 	}
 
 	log.InfoContext(r.Context(), "request received", "req", req)
 
 	if err := h.validator.Struct(req); err != nil {
-		msg := response.ValidationErrorCode
+		msg := common.ValidationErrorCode
 		log.ErrorContext(r.Context(), msg, "error", err)
 
 		if validationErr, ok := errors.AsType[validator.ValidationErrors](err); ok {
-			common.RespondJSON(log, w, http.StatusBadRequest, response.NewValidationError(validationErr))
+			common.RespondJSON(log, w, http.StatusBadRequest, common.NewValidationError(validationErr))
 			return
 		}
 
 		log.ErrorContext(r.Context(), "failed to validate request", "error", err)
-		common.RespondJSON(log, w, http.StatusInternalServerError, response.NewBaseError("server error"))
+		common.RespondJSON(log, w, http.StatusInternalServerError, common.NewBaseError("server error"))
 		return
 	}
 	date := time.Date(2026, time.September, 1, 12, 0, 0, 0, time.UTC).Format(time.RFC3339)

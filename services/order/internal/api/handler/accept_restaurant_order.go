@@ -20,9 +20,9 @@ func (h *Handler) acceptRestaurantOrder(w http.ResponseWriter, r *http.Request) 
 
 	orderID := r.PathValue(orderIDKey)
 	if orderID == "" {
-		msg := response.OrderIDRequiredErrorCode
+		msg := common.OrderIDRequiredErrorCode
 		log.ErrorContext(r.Context(), msg)
-		common.RespondJSON(log, w, http.StatusBadRequest, response.NewBaseError(msg))
+		common.RespondJSON(log, w, http.StatusBadRequest, common.NewBaseError(msg))
 		return
 	}
 	log.DebugContext(r.Context(), "order id parsed", "order_id", orderID)

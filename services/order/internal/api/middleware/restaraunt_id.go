@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/zulerne/go-mentor-junior/order/internal/api/common"
-	"github.com/zulerne/go-mentor-junior/order/internal/api/response"
 )
 
 const (
@@ -28,7 +27,7 @@ func RestaurantID(log *slog.Logger) Middleware {
 					log,
 					w,
 					http.StatusBadRequest,
-					response.NewError(response.BadRequestErrorCode, "X-Restaurant-ID header is required", nil),
+					common.NewError(common.BadRequestErrorCode, "X-Restaurant-ID header is required", nil),
 				)
 				return
 			}

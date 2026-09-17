@@ -31,7 +31,7 @@ func (h *Handler) getCart(w http.ResponseWriter, r *http.Request) {
 				log,
 				w,
 				http.StatusNotFound,
-				response.NewError(response.CustomerNotFoundErrorCode, "customer not found", nil),
+				common.NewError(common.CustomerNotFoundErrorCode, "customer not found", nil),
 			)
 			return
 		}
@@ -42,7 +42,7 @@ func (h *Handler) getCart(w http.ResponseWriter, r *http.Request) {
 			log,
 			w,
 			http.StatusInternalServerError,
-			response.NewBaseError(msg),
+			common.NewBaseError(msg),
 		)
 		return
 	}

@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/zulerne/go-mentor-junior/order/internal/api/common"
-	"github.com/zulerne/go-mentor-junior/order/internal/api/response"
 )
 
 func Recoverer(log *slog.Logger) Middleware {
@@ -19,7 +18,7 @@ func Recoverer(log *slog.Logger) Middleware {
 						log,
 						w,
 						http.StatusInternalServerError,
-						response.NewError(response.BaseErrorCode, "internal server error", nil),
+						common.NewError(common.BaseErrorCode, "internal server error", nil),
 					)
 				}
 			}()

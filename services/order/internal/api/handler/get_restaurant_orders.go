@@ -29,7 +29,7 @@ func (h *Handler) getRestaurantOrders(w http.ResponseWriter, r *http.Request) {
 				log,
 				w,
 				http.StatusNotFound,
-				response.NewError(response.RestaurantNotFoundErrorCode, "restaurant not found", nil),
+				common.NewError(common.RestaurantNotFoundErrorCode, "restaurant not found", nil),
 			)
 			return
 		}
@@ -39,7 +39,7 @@ func (h *Handler) getRestaurantOrders(w http.ResponseWriter, r *http.Request) {
 			log,
 			w,
 			http.StatusInternalServerError,
-			response.NewBaseError(msg),
+			common.NewBaseError(msg),
 		)
 		return
 	}
