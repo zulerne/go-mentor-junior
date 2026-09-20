@@ -16,8 +16,9 @@ const (
 type OrderDeliveryStatus string
 
 const (
-	WaitingForPreparation OrderDeliveryStatus = "WAITING_FOR_PREPARATION"
-	InDelivery            OrderDeliveryStatus = "IN_DELIVERY"
+	UnspecifiedOrderDeliveryStatus OrderDeliveryStatus = ""
+	WaitingForPreparation          OrderDeliveryStatus = "WAITING_FOR_PREPARATION"
+	InDelivery                     OrderDeliveryStatus = "IN_DELIVERY"
 )
 
 // TODO: Add micro/mini types for id fields
@@ -39,8 +40,8 @@ type Order struct {
 	SubtotalMinor   int64
 	Currency        string
 	DeliveryAddress string
-	RejectionReason *string
-	DeliveryStatus  *OrderDeliveryStatus
+	RejectionReason string
+	DeliveryStatus  OrderDeliveryStatus
 	CreatedAt       time.Time
 	UpdatedAt       time.Time
 }

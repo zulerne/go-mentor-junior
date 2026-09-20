@@ -25,8 +25,8 @@ func NewMemoryOrderStore() *MemoryOrderStore {
 		SubtotalMinor:   0,
 		Currency:        "",
 		DeliveryAddress: "",
-		RejectionReason: nil,
-		DeliveryStatus:  nil,
+		RejectionReason: "",
+		DeliveryStatus:  domain.UnspecifiedOrderDeliveryStatus,
 		CreatedAt:       date,
 		UpdatedAt:       date,
 	}

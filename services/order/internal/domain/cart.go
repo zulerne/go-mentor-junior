@@ -10,8 +10,8 @@ type CartItem struct {
 }
 
 type Cart struct {
-	RestaurantID  *string
+	RestaurantID  string
 	Items         []CartItem
 	SubtotalMinor int64
-	Currency      *string
+	Currency      string
 }

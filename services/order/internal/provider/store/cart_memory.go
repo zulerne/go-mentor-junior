@@ -21,7 +21,7 @@ func NewMemoryCartStore() *MemoryCartStore {
 	currency := "USD"
 
 	data["test"] = domain.Cart{
-		RestaurantID: &restaurantID,
+		RestaurantID: restaurantID,
 		Items: []domain.CartItem{
 			{
 				MenuItemID:     "menu_item_id_1",
@@ -33,7 +33,7 @@ func NewMemoryCartStore() *MemoryCartStore {
 			},
 		},
 		SubtotalMinor: 100,
-		Currency:      &currency,
+		Currency:      currency,
 	}
 
 	return &MemoryCartStore{
@@ -54,10 +54,10 @@ func (s *MemoryCartStore) AddItem(
 	cart, ok := s.data[customerID]
 	if !ok {
 		cart = domain.Cart{
-			RestaurantID:  &restaurantID,
+			RestaurantID:  restaurantID,
 			Items:         []domain.CartItem{},
 			SubtotalMinor: 0,
-			Currency:      &menuItem.Currency,
+			Currency:      menuItem.Currency,
 		}
 	}
 	s.data[customerID] = cart

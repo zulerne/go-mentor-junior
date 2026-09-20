@@ -12,10 +12,10 @@ type CartItem struct {
 }
 
 type CartResponse struct {
-	RestaurantID  *string    `json:"restaurant_id"`
+	RestaurantID  string     `json:"restaurant_id,omitempty"`
 	Items         []CartItem `json:"items"`
 	SubtotalMinor int64      `json:"subtotal_minor"`
-	Currency      *string    `json:"currency"`
+	Currency      string     `json:"currency,omitempty"`
 }
 
 type OrderItem struct {
@@ -35,8 +35,8 @@ type OrderResponse struct {
 	SubtotalMinor   int64       `json:"subtotal_minor"`
 	Currency        string      `json:"currency"`
 	DeliveryAddress string      `json:"delivery_address"`
-	RejectionReason *string     `json:"rejection_reason"`
-	DeliveryStatus  *string     `json:"delivery_status"`
+	RejectionReason string      `json:"rejection_reason,omitempty"`
+	DeliveryStatus  string      `json:"delivery_status,omitempty"`
 	CreatedAt       string      `json:"created_at"`
 	UpdatedAt       string      `json:"updated_at"`
 }

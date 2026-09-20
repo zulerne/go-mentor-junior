@@ -47,11 +47,6 @@ func (h *Handler) getRestaurantOrders(w http.ResponseWriter, r *http.Request) {
 
 	orderResponses := make([]OrderResponse, 0, len(orders))
 	for _, order := range orders {
-		var deliveryStatus *string
-		if order.DeliveryStatus != nil {
-			deliveryStatus = (*string)(order.DeliveryStatus)
-		}
-
 		items := make([]OrderItem, 0, len(order.Items))
 		for _, item := range order.Items {
 			items = append(items, OrderItem{
@@ -72,7 +67,7 @@ func (h *Handler) getRestaurantOrders(w http.ResponseWriter, r *http.Request) {
 			Currency:        order.Currency,
 			DeliveryAddress: order.DeliveryAddress,
 			RejectionReason: order.RejectionReason,
-			DeliveryStatus:  deliveryStatus,
+			DeliveryStatus:  string(order.DeliveryStatus),
 			CreatedAt:       order.CreatedAt.UTC().Format(time.RFC3339),
 			UpdatedAt:       order.UpdatedAt.UTC().Format(time.RFC3339),
 			Items:           items,
