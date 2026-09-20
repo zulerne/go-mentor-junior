@@ -8,8 +8,6 @@ import (
 	"github.com/zulerne/go-mentor-junior/order/internal/api/common"
 )
 
-// TODO (review): Do I need these middleware(customer/restaurant ids) or should I extract them manually from the request?
-
 const (
 	customerIDKey contextKey = "customer_id"
 

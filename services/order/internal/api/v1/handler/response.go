@@ -1,7 +1,5 @@
 package handler
 
-// TODO (review): I don't sure about where these structs should be placed. And is it okay that these structs almost the same as domain structs?
-
 type CartItem struct {
 	MenuItemID     string `json:"menu_item_id"`
 	Name           string `json:"name"`

@@ -90,8 +90,6 @@ func (h *Handler) Routes() http.Handler {
 	)
 }
 
-// TODO (review): Is it okay to have helper functions like these below?
-
 func (h *Handler) livez(w http.ResponseWriter, _ *http.Request) {
 	common.RespondJSON(
 		h.log,
