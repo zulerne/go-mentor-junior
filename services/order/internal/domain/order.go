@@ -1,6 +1,10 @@
 package domain
 
-import "time"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type OrderStatus string
 
@@ -24,7 +28,7 @@ const (
 // TODO: Add micro/mini types for id fields
 
 type OrderItem struct {
-	MenuItemID     string
+	MenuItemID     uuid.UUID
 	Name           string
 	UnitPriceMinor int64
 	Quantity       int32
@@ -32,9 +36,9 @@ type OrderItem struct {
 }
 
 type Order struct {
-	ID              string
-	CustomerID      string
-	RestaurantID    string
+	ID              uuid.UUID
+	CustomerID      uuid.UUID
+	RestaurantID    uuid.UUID
 	Status          OrderStatus
 	Items           []OrderItem
 	SubtotalMinor   int64

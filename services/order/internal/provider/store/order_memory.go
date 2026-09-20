@@ -4,22 +4,23 @@ import (
 	"context"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/zulerne/go-mentor-junior/order/internal/domain"
 )
 
 type MemoryOrderStore struct {
-	data map[string]domain.Order
+	data map[uuid.UUID]domain.Order
 }
 
 func NewMemoryOrderStore() *MemoryOrderStore {
-	data := make(map[string]domain.Order)
+	data := make(map[uuid.UUID]domain.Order)
 
 	date := time.Date(2026, time.September, 1, 12, 0, 0, 0, time.UTC)
 
-	data["test"] = domain.Order{
-		ID:              "test",
-		CustomerID:      "",
-		RestaurantID:    "1",
+	data[uuid.MustParse("test")] = domain.Order{
+		ID:              uuid.MustParse("test"),
+		CustomerID:      uuid.MustParse(""),
+		RestaurantID:    uuid.MustParse("1"),
 		Status:          domain.Pending,
 		Items:           nil,
 		SubtotalMinor:   0,
@@ -35,7 +36,7 @@ func NewMemoryOrderStore() *MemoryOrderStore {
 	}
 }
 
-func (s *MemoryOrderStore) Find(_ context.Context, id string) (domain.Order, error) {
+func (s *MemoryOrderStore) Find(_ context.Context, id uuid.UUID) (domain.Order, error) {
 	order, ok := s.data[id]
 	if !ok {
 		return domain.Order{}, nil
@@ -43,7 +44,7 @@ func (s *MemoryOrderStore) Find(_ context.Context, id string) (domain.Order, err
 	return order, nil
 }
 
-func (s *MemoryOrderStore) FindByRestaurant(_ context.Context, restaurantID string) ([]domain.Order, error) {
+func (s *MemoryOrderStore) FindByRestaurant(_ context.Context, restaurantID uuid.UUID) ([]domain.Order, error) {
 	var orders []domain.Order
 	for _, order := range s.data {
 		if order.RestaurantID == restaurantID {

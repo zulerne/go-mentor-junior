@@ -5,26 +5,27 @@ import (
 	"slices"
 	"sync"
 
+	"github.com/google/uuid"
 	"github.com/zulerne/go-mentor-junior/order/internal/domain"
 )
 
 type MemoryCartStore struct {
 	// data is a map of cart IDs to cart data
-	data map[string]domain.Cart
+	data map[uuid.UUID]domain.Cart
 	mu   sync.RWMutex
 }
 
 func NewMemoryCartStore() *MemoryCartStore {
-	data := make(map[string]domain.Cart)
+	data := make(map[uuid.UUID]domain.Cart)
 
-	restaurantID := "restaurant_id_1"
+	restaurantID := uuid.MustParse("restaurant_id_1")
 	currency := "USD"
 
-	data["test"] = domain.Cart{
+	data[uuid.MustParse("test")] = domain.Cart{
 		RestaurantID: restaurantID,
 		Items: []domain.CartItem{
 			{
-				MenuItemID:     "menu_item_id_1",
+				MenuItemID:     uuid.MustParse("menu_item_id_1"),
 				Name:           "item_name",
 				UnitPriceMinor: 100,
 				Currency:       currency,
@@ -43,7 +44,8 @@ func NewMemoryCartStore() *MemoryCartStore {
 
 func (s *MemoryCartStore) AddItem(
 	_ context.Context,
-	restaurantID, customerID string,
+	restaurantID uuid.UUID,
+	customerID uuid.UUID,
 	menuItem domain.MenuItem,
 	quantity int,
 	instructions string,
@@ -72,7 +74,7 @@ func (s *MemoryCartStore) AddItem(
 	return nil
 }
 
-func (s *MemoryCartStore) FindCart(_ context.Context, customerID string) (domain.Cart, error) {
+func (s *MemoryCartStore) FindCart(_ context.Context, customerID uuid.UUID) (domain.Cart, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 

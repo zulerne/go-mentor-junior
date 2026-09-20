@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/google/uuid"
 	"github.com/zulerne/go-mentor-junior/order/internal/api/common"
 	"github.com/zulerne/go-mentor-junior/order/internal/api/middleware"
 	"github.com/zulerne/go-mentor-junior/order/internal/domain"
@@ -17,11 +18,11 @@ const (
 )
 
 type Customer interface {
-	GetCart(ctx context.Context, customerID string) (domain.Cart, error)
+	GetCart(ctx context.Context, customerID uuid.UUID) (domain.Cart, error)
 }
 
 type Restaurant interface {
-	GetOrders(ctx context.Context, restaurantID string) ([]domain.Order, error)
+	GetOrders(ctx context.Context, restaurantID uuid.UUID) ([]domain.Order, error)
 }
 
 // Handler holds all dependencies for HTTP handlers.

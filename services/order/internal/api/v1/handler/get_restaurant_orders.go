@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/zulerne/go-mentor-junior/order/internal/api/common"
 	"github.com/zulerne/go-mentor-junior/order/internal/api/middleware"
 	"github.com/zulerne/go-mentor-junior/order/internal/domain"
@@ -23,7 +24,7 @@ func (h *Handler) getRestaurantOrders(w http.ResponseWriter, r *http.Request) {
 
 	log.DebugContext(r.Context(), "request received")
 
-	orders, err := h.restaurant.GetOrders(r.Context(), restaurantID)
+	orders, err := h.restaurant.GetOrders(r.Context(), uuid.MustParse(restaurantID))
 	if err != nil {
 		if errors.Is(err, domain.ErrNotFound) {
 			common.RespondJSON(
@@ -50,7 +51,7 @@ func (h *Handler) getRestaurantOrders(w http.ResponseWriter, r *http.Request) {
 		items := make([]OrderItem, 0, len(order.Items))
 		for _, item := range order.Items {
 			items = append(items, OrderItem{
-				MenuItemID:     item.MenuItemID,
+				MenuItemID:     item.MenuItemID.String(),
 				Name:           item.Name,
 				UnitPriceMinor: item.UnitPriceMinor,
 				Quantity:       item.Quantity,
@@ -59,9 +60,9 @@ func (h *Handler) getRestaurantOrders(w http.ResponseWriter, r *http.Request) {
 		}
 
 		orderResponses = append(orderResponses, OrderResponse{
-			ID:              order.ID,
-			CustomerID:      order.CustomerID,
-			RestaurantID:    order.RestaurantID,
+			ID:              order.ID.String(),
+			CustomerID:      order.CustomerID.String(),
+			RestaurantID:    order.RestaurantID.String(),
 			Status:          string(order.Status),
 			SubtotalMinor:   order.SubtotalMinor,
 			Currency:        order.Currency,

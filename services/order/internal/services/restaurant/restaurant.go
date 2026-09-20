@@ -4,17 +4,18 @@ import (
 	"context"
 	"log/slog"
 
+	"github.com/google/uuid"
 	"github.com/zulerne/go-mentor-junior/order/internal/domain"
 )
 
 type OrderStore interface {
-	Find(ctx context.Context, id string) (domain.Order, error)
-	FindByRestaurant(ctx context.Context, restaurantID string) ([]domain.Order, error)
+	Find(ctx context.Context, id uuid.UUID) (domain.Order, error)
+	FindByRestaurant(ctx context.Context, restaurantID uuid.UUID) ([]domain.Order, error)
 }
 
 type DeliveryProvider interface {
-	Create(ctx context.Context, orderID string) error
-	Start(ctx context.Context, orderID string) error
+	Create(ctx context.Context, orderID uuid.UUID) error
+	Start(ctx context.Context, orderID uuid.UUID) error
 }
 
 type Service struct {
@@ -33,7 +34,7 @@ func New(store OrderStore, deliveryProvider DeliveryProvider, log *slog.Logger) 
 	return r
 }
 
-func (r *Service) GetOrders(ctx context.Context, restaurantID string) ([]domain.Order, error) {
+func (r *Service) GetOrders(ctx context.Context, restaurantID uuid.UUID) ([]domain.Order, error) {
 	orders, err := r.store.FindByRestaurant(ctx, restaurantID)
 	if err != nil {
 		return nil, err

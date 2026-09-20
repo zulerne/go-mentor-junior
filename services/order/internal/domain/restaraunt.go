@@ -1,7 +1,9 @@
 package domain
 
+import "github.com/google/uuid"
+
 type Restaurant struct {
-	ID                string
+	ID                uuid.UUID
 	Name              string
 	AcceptingOrders   bool
 	MinimumOrderMinor int64

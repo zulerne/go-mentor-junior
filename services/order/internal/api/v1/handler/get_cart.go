@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/google/uuid"
 	"github.com/zulerne/go-mentor-junior/order/internal/api/common"
 	"github.com/zulerne/go-mentor-junior/order/internal/api/middleware"
 	"github.com/zulerne/go-mentor-junior/order/internal/domain"
@@ -24,7 +25,7 @@ func (h *Handler) getCart(w http.ResponseWriter, r *http.Request) {
 
 	cart, err := h.customer.GetCart(
 		r.Context(),
-		customerID,
+		uuid.MustParse(customerID),
 	)
 	if err != nil {
 		if errors.Is(err, domain.ErrNotFound) {
@@ -51,7 +52,7 @@ func (h *Handler) getCart(w http.ResponseWriter, r *http.Request) {
 	cartItems := make([]CartItem, 0, len(cart.Items))
 	for _, item := range cart.Items {
 		cartItems = append(cartItems, CartItem{
-			MenuItemID:     item.MenuItemID,
+			MenuItemID:     item.MenuItemID.String(),
 			Name:           item.Name,
 			UnitPriceMinor: item.UnitPriceMinor,
 			Currency:       item.Currency,
@@ -65,7 +66,7 @@ func (h *Handler) getCart(w http.ResponseWriter, r *http.Request) {
 		w,
 		http.StatusOK,
 		CartResponse{
-			RestaurantID:  cart.RestaurantID,
+			RestaurantID:  cart.RestaurantID.String(),
 			Items:         cartItems,
 			SubtotalMinor: cart.SubtotalMinor,
 			Currency:      cart.Currency,

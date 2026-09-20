@@ -1,7 +1,9 @@
 package domain
 
+import "github.com/google/uuid"
+
 type CartItem struct {
-	MenuItemID     string
+	MenuItemID     uuid.UUID
 	Name           string
 	UnitPriceMinor int64
 	Currency       string
@@ -10,7 +12,7 @@ type CartItem struct {
 }
 
 type Cart struct {
-	RestaurantID  string
+	RestaurantID  uuid.UUID
 	Items         []CartItem
 	SubtotalMinor int64
 	Currency      string
