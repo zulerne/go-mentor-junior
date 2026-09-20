@@ -20,6 +20,7 @@ import (
 	store "github.com/zulerne/go-mentor-junior/order/internal/provider/store"
 	"github.com/zulerne/go-mentor-junior/order/internal/services/customer"
 	"github.com/zulerne/go-mentor-junior/order/internal/services/restaurant"
+	"golang.org/x/sync/errgroup"
 )
 
 // TODO (review): Global questions:
@@ -61,27 +62,26 @@ func main() {
 	}
 }
 
+// TODO(review): норм я подрефакторил грейсфул с ерроргрупой? По мне кажется чище\изящнее. Что скажешь?
 func run(log *slog.Logger, srv *http.Server, shutdownTimeout time.Duration) error {
-	errCh := make(chan error, 1)
-	go func() {
-		log.Info("starting server", "address", srv.Addr)
-
-		if err := srv.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
-			errCh <- err
-			return
-		}
-		errCh <- nil
-	}()
-
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
-	select {
-	case err := <-errCh:
-		if err != nil {
+	g, gCtx := errgroup.WithContext(ctx)
+
+	g.Go(func() error {
+		log.Info("starting server", "address", srv.Addr)
+
+		if err := srv.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
 			return err
 		}
-	case <-ctx.Done():
+
+		return nil
+	})
+
+	g.Go(func() error {
+		<-gCtx.Done()
+
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
 		defer cancel()
 
@@ -91,14 +91,11 @@ func run(log *slog.Logger, srv *http.Server, shutdownTimeout time.Duration) erro
 				return errors.Join(err, closeErr)
 			}
 			return err
-		} else {
-			log.Info("server stopped gracefully")
 		}
 
-		if err := <-errCh; err != nil {
-			return err
-		}
-	}
+		log.Info("server stopped gracefully")
+		return nil
+	})
 
-	return nil
+	return g.Wait()
 }

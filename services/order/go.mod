@@ -2,7 +2,10 @@ module github.com/zulerne/go-mentor-junior/order
 
 go 1.27.1
 
-require github.com/go-playground/validator/v10 v10.30.4
+require (
+	github.com/go-playground/validator/v10 v10.30.4
+	golang.org/x/sync v0.23.0
+)
 
 require (
 	github.com/gabriel-vasile/mimetype v1.4.15 // indirect
