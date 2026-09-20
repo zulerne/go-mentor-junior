@@ -1,0 +1,85 @@
+package handler
+
+import (
+	"errors"
+	"net/http"
+	"time"
+
+	"github.com/google/uuid"
+	"github.com/zulerne/go-mentor-junior/order/internal/api/common"
+	"github.com/zulerne/go-mentor-junior/order/internal/api/middleware"
+	"github.com/zulerne/go-mentor-junior/order/internal/domain"
+)
+
+func (h *Handler) getRestaurantOrders(w http.ResponseWriter, r *http.Request) {
+	op := "handler.getRestaurantOrders"
+	requestID, _ := middleware.RequestIDFromContext(r.Context())
+	restaurantID, _ := middleware.RestaurantIDFromContext(r.Context())
+
+	log := h.log.With(
+		"op", op,
+		"request_id", requestID,
+		"restaurant_id", restaurantID,
+	)
+
+	log.DebugContext(r.Context(), "request received")
+
+	orders, err := h.restaurant.GetOrders(r.Context(), uuid.MustParse(restaurantID))
+	if err != nil {
+		if errors.Is(err, domain.ErrNotFound) {
+			common.RespondJSON(
+				log,
+				w,
+				http.StatusNotFound,
+				common.NewError(common.RestaurantNotFoundErrorCode, "restaurant not found", nil),
+			)
+			return
+		}
+		msg := "failed to get orders"
+		log.ErrorContext(r.Context(), msg, "error", err)
+		common.RespondJSON(
+			log,
+			w,
+			http.StatusInternalServerError,
+			common.NewBaseError(msg),
+		)
+		return
+	}
+
+	orderResponses := make([]OrderResponse, 0, len(orders))
+	for _, order := range orders {
+		items := make([]OrderItem, 0, len(order.Items))
+		for _, item := range order.Items {
+			items = append(items, OrderItem{
+				MenuItemID:     item.MenuItemID.String(),
+				Name:           item.Name,
+				UnitPriceMinor: item.UnitPriceMinor,
+				Quantity:       item.Quantity,
+				Instructions:   item.Instructions,
+			})
+		}
+
+		orderResponses = append(orderResponses, OrderResponse{
+			ID:              order.ID.String(),
+			CustomerID:      order.CustomerID.String(),
+			RestaurantID:    order.RestaurantID.String(),
+			Status:          string(order.Status),
+			SubtotalMinor:   order.SubtotalMinor,
+			Currency:        order.Currency,
+			DeliveryAddress: order.DeliveryAddress,
+			RejectionReason: order.RejectionReason,
+			DeliveryStatus:  string(order.DeliveryStatus),
+			CreatedAt:       order.CreatedAt.UTC().Format(time.RFC3339),
+			UpdatedAt:       order.UpdatedAt.UTC().Format(time.RFC3339),
+			Items:           items,
+		})
+	}
+
+	common.RespondJSON(
+		log,
+		w,
+		http.StatusOK,
+		AllOrdersResponse{
+			Orders: orderResponses,
+		})
+}
