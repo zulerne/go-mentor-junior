@@ -26,7 +26,7 @@ func (h *Handler) getRestaurantOrders(w http.ResponseWriter, r *http.Request) {
 
 	orders, err := h.restaurant.GetOrders(r.Context(), uuid.MustParse(restaurantID))
 	if err != nil {
-		if errors.Is(err, domain.ErrNotFound) {
+		if errors.Is(err, domain.ErrRestaurantNotFound) {
 			common.RespondJSON(
 				log,
 				w,

@@ -28,7 +28,7 @@ func (h *Handler) getCart(w http.ResponseWriter, r *http.Request) {
 		uuid.MustParse(customerID),
 	)
 	if err != nil {
-		if errors.Is(err, domain.ErrNotFound) {
+		if errors.Is(err, domain.ErrOrderNotFound) {
 			common.RespondJSON(
 				log,
 				w,
