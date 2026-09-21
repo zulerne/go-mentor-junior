@@ -69,10 +69,28 @@ func (s *MemoryCartStore) AddItem(
 	}
 	s.data[customerID] = cart
 
+	for i := range cart.Items {
+		if cart.Items[i].MenuItemID == menuItem.ID {
+			oldPrice, oldQuantity := cart.Items[i].UnitPriceMinor, cart.Items[i].Quantity
+			cart.Items[i].UnitPriceMinor = menuItem.PriceMinor
+			cart.Items[i].Quantity = int32(quantity)
+			cart.SubtotalMinor -= int64(oldQuantity) * oldPrice
+			cart.SubtotalMinor += int64(quantity) * menuItem.PriceMinor
+
+			cart.Items[i].Name = menuItem.Name
+			cart.Items[i].Instructions = instructions
+			s.data[customerID] = cart
+			return nil
+		}
+	}
+
 	cart.Items = append(cart.Items, domain.CartItem{
-		MenuItemID:   menuItem.ID,
-		Quantity:     int32(quantity),
-		Instructions: instructions,
+		MenuItemID:     menuItem.ID,
+		Name:           menuItem.Name,
+		Quantity:       int32(quantity),
+		UnitPriceMinor: menuItem.PriceMinor,
+		Currency:       menuItem.Currency,
+		Instructions:   instructions,
 	})
 	cart.SubtotalMinor += int64(quantity) * menuItem.PriceMinor
 	s.data[customerID] = cart
