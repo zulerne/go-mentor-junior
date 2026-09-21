@@ -47,7 +47,7 @@ func NewMemoryOrderStore() *MemoryOrderStore {
 func (s *MemoryOrderStore) Find(_ context.Context, id uuid.UUID) (domain.Order, error) {
 	order, ok := s.data[id]
 	if !ok {
-		return domain.Order{}, nil
+		return domain.Order{}, domain.ErrOrderNotFound
 	}
 	return order, nil
 }
@@ -60,4 +60,9 @@ func (s *MemoryOrderStore) FindByRestaurant(_ context.Context, restaurantID uuid
 		}
 	}
 	return orders, nil
+}
+
+func (s *MemoryOrderStore) Update(_ context.Context, order domain.Order) error {
+	s.data[order.ID] = order
+	return nil
 }
