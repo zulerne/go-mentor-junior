@@ -33,11 +33,3 @@ func New(store OrderStore, deliveryProvider DeliveryProvider, log *slog.Logger) 
 	}
 	return r
 }
-
-func (r *Service) GetOrders(ctx context.Context, restaurantID uuid.UUID) ([]domain.Order, error) {
-	orders, err := r.store.FindByRestaurant(ctx, restaurantID)
-	if err != nil {
-		return nil, err
-	}
-	return orders, nil
-}

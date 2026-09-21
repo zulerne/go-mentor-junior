@@ -46,11 +46,3 @@ func New(orderStore OrderStore, cartStore CartStore, restaurantProvider Restaura
 
 	return c
 }
-
-func (c *Service) GetCart(ctx context.Context, customerID uuid.UUID) (domain.Cart, error) {
-	cart, err := c.cartStore.FindCart(ctx, customerID)
-	if err != nil {
-		return domain.Cart{}, err
-	}
-	return cart, nil
-}
