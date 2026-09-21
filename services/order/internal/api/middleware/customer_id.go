@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/google/uuid"
 	"github.com/zulerne/go-mentor-junior/order/internal/api/common"
 )
 
@@ -20,9 +21,9 @@ func CustomerID(log *slog.Logger) Middleware {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			log.DebugContext(r.Context(), "Checking for X-Customer-ID header")
 
-			h := r.Header.Get(customerIDHeader)
+			customerID, err := uuid.Parse(r.Header.Get(customerIDHeader))
 
-			if h == "" {
+			if err != nil {
 				log.ErrorContext(r.Context(), "X-Customer-ID header is missing")
 
 				common.RespondJSON(
@@ -34,7 +35,7 @@ func CustomerID(log *slog.Logger) Middleware {
 				return
 			}
 
-			ctx := WithCustomerID(r.Context(), h)
+			ctx := WithCustomerID(r.Context(), customerID.String())
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
