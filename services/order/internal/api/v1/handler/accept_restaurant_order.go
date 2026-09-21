@@ -29,9 +29,10 @@ func (h *Handler) acceptRestaurantOrder(w http.ResponseWriter, r *http.Request) 
 		common.RespondJSON(log, w, http.StatusBadRequest, common.NewBaseError(msg))
 		return
 	}
+	log = log.With("order_id", orderID)
 	log.DebugContext(r.Context(), "order id parsed", "order_id", orderID)
 
-	order, err := h.restaurant.AcceptOrder(r.Context(), uuid.MustParse(restaurantID), orderID)
+	order, err := h.restaurant.AcceptOrder(r.Context(), restaurantID, orderID)
 	if err != nil {
 		switch {
 		case errors.Is(err, domain.ErrOrderNotFound):

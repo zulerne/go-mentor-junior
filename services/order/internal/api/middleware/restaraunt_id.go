@@ -33,17 +33,17 @@ func RestaurantID(log *slog.Logger) Middleware {
 				return
 			}
 
-			ctx := WithRestaurantID(r.Context(), restaurantID.String())
+			ctx := WithRestaurantID(r.Context(), restaurantID)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
 }
 
-func WithRestaurantID(ctx context.Context, id string) context.Context {
+func WithRestaurantID(ctx context.Context, id uuid.UUID) context.Context {
 	return context.WithValue(ctx, restaurantIDKey, id)
 }
 
-func RestaurantIDFromContext(ctx context.Context) (string, bool) {
-	id, ok := ctx.Value(restaurantIDKey).(string)
+func RestaurantIDFromContext(ctx context.Context) (uuid.UUID, bool) {
+	id, ok := ctx.Value(restaurantIDKey).(uuid.UUID)
 	return id, ok
 }

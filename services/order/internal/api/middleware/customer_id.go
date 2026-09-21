@@ -35,17 +35,17 @@ func CustomerID(log *slog.Logger) Middleware {
 				return
 			}
 
-			ctx := WithCustomerID(r.Context(), customerID.String())
+			ctx := WithCustomerID(r.Context(), customerID)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
 }
 
-func WithCustomerID(ctx context.Context, id string) context.Context {
+func WithCustomerID(ctx context.Context, id uuid.UUID) context.Context {
 	return context.WithValue(ctx, customerIDKey, id)
 }
 
-func CustomerIDFromContext(ctx context.Context) (string, bool) {
-	id, ok := ctx.Value(customerIDKey).(string)
+func CustomerIDFromContext(ctx context.Context) (uuid.UUID, bool) {
+	id, ok := ctx.Value(customerIDKey).(uuid.UUID)
 	return id, ok
 }

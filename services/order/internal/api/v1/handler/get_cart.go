@@ -4,7 +4,6 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/google/uuid"
 	"github.com/zulerne/go-mentor-junior/order/internal/api/common"
 	"github.com/zulerne/go-mentor-junior/order/internal/api/middleware"
 	"github.com/zulerne/go-mentor-junior/order/internal/domain"
@@ -25,7 +24,7 @@ func (h *Handler) getCart(w http.ResponseWriter, r *http.Request) {
 
 	cart, err := h.customer.GetCart(
 		r.Context(),
-		uuid.MustParse(customerID),
+		customerID,
 	)
 	if err != nil {
 		if errors.Is(err, domain.ErrOrderNotFound) {
