@@ -16,11 +16,19 @@ func NewMemoryOrderStore() *MemoryOrderStore {
 	data := make(map[uuid.UUID]domain.Order)
 
 	date := time.Date(2026, time.September, 1, 12, 0, 0, 0, time.UTC)
+	// restId: fe70cb38-d10d-452c-8860-1af5936f7037
+	// id1: 58185771-1f9f-4d71-9609-bdacea1deb2e
+	// id2: 4c5344f5-33d7-4c05-bbbc-a0edc4178e7e
+	// userId: ef55f77a-7738-426f-93a4-f78f2baf7970
+	// orderId: 2f5efdc6-c936-4fdf-a681-1e21e73e6e71
 
-	data[uuid.MustParse("test")] = domain.Order{
-		ID:              uuid.MustParse("test"),
-		CustomerID:      uuid.MustParse(""),
-		RestaurantID:    uuid.MustParse("1"),
+	orderId := uuid.MustParse("2f5efdc6-c936-4fdf-a681-1e21e73e6e71")
+	customerId := uuid.MustParse("ef55f77a-7738-426f-93a4-f78f2baf7970")
+	restaurantId := uuid.MustParse("fe70cb38-d10d-452c-8860-1af5936f7037")
+	data[orderId] = domain.Order{
+		ID:              orderId,
+		CustomerID:      customerId,
+		RestaurantID:    restaurantId,
 		Status:          domain.Pending,
 		Items:           nil,
 		SubtotalMinor:   0,

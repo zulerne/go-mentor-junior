@@ -18,14 +18,19 @@ type MemoryCartStore struct {
 func NewMemoryCartStore() *MemoryCartStore {
 	data := make(map[uuid.UUID]domain.Cart)
 
-	restaurantID := uuid.MustParse("restaurant_id_1")
+	// restId: fe70cb38-d10d-452c-8860-1af5936f7037
+	// id1: 58185771-1f9f-4d71-9609-bdacea1deb2e
+	// id2: 4c5344f5-33d7-4c05-bbbc-a0edc4178e7e
+	// userId: ef55f77a-7738-426f-93a4-f78f2baf7970
+	// orderId: 2f5efdc6-c936-4fdf-a681-1e21e73e6e71
+	restaurantID := uuid.MustParse("fe70cb38-d10d-452c-8860-1af5936f7037")
 	currency := "USD"
-
-	data[uuid.MustParse("test")] = domain.Cart{
+	userId := uuid.MustParse("ef55f77a-7738-426f-93a4-f78f2baf7970")
+	data[userId] = domain.Cart{
 		RestaurantID: restaurantID,
 		Items: []domain.CartItem{
 			{
-				MenuItemID:     uuid.MustParse("menu_item_id_1"),
+				MenuItemID:     uuid.MustParse("58185771-1f9f-4d71-9609-bdacea1deb2e"),
 				Name:           "item_name",
 				UnitPriceMinor: 100,
 				Currency:       currency,
