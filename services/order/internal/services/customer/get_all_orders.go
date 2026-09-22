@@ -8,5 +8,5 @@ import (
 )
 
 func (s *Service) GetAllOrders(ctx context.Context, customerID uuid.UUID) ([]domain.Order, error) {
-	return nil, nil
+	return s.orderStore.GetAllOrders(ctx, customerID)
 }

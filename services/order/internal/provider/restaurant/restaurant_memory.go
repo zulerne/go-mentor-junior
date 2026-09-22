@@ -2,6 +2,7 @@ package restaurant
 
 import (
 	"context"
+	"sync"
 
 	"github.com/google/uuid"
 	"github.com/zulerne/go-mentor-junior/order/internal/domain"
@@ -10,6 +11,7 @@ import (
 type MemoryProvider struct {
 	meta map[uuid.UUID]domain.Restaurant
 	data map[uuid.UUID]map[uuid.UUID]domain.MenuItem
+	mu   sync.RWMutex
 }
 
 func NewMemoryProvider() *MemoryProvider {
@@ -54,6 +56,9 @@ func NewMemoryProvider() *MemoryProvider {
 }
 
 func (r *MemoryProvider) Find(_ context.Context, restaurantID uuid.UUID) (domain.Restaurant, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
 	restaurant, ok := r.meta[restaurantID]
 	if !ok {
 		return domain.Restaurant{}, domain.ErrRestaurantNotFound
@@ -62,6 +67,9 @@ func (r *MemoryProvider) Find(_ context.Context, restaurantID uuid.UUID) (domain
 }
 
 func (r *MemoryProvider) FindItem(_ context.Context, restaurantID uuid.UUID, menuItemID uuid.UUID) (domain.MenuItem, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
 	items, ok := r.data[restaurantID]
 	if !ok {
 		return domain.MenuItem{}, domain.ErrRestaurantNotFound

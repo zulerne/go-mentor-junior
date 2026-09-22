@@ -11,6 +11,7 @@ import (
 type OrderStore interface {
 	Find(ctx context.Context, id uuid.UUID) (domain.Order, error)
 	Update(ctx context.Context, order domain.Order) error
+	GetAllOrders(ctx context.Context, customerID uuid.UUID) ([]domain.Order, error)
 }
 
 type CartStore interface {

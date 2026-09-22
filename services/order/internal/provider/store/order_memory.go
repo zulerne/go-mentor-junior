@@ -2,6 +2,7 @@ package store
 
 import (
 	"context"
+	"sync"
 	"time"
 
 	"github.com/google/uuid"
@@ -9,6 +10,7 @@ import (
 )
 
 type MemoryOrderStore struct {
+	mu   sync.RWMutex
 	data map[uuid.UUID]domain.Order
 }
 
@@ -45,6 +47,9 @@ func NewMemoryOrderStore() *MemoryOrderStore {
 }
 
 func (s *MemoryOrderStore) Find(_ context.Context, id uuid.UUID) (domain.Order, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
 	order, ok := s.data[id]
 	if !ok {
 		return domain.Order{}, domain.ErrOrderNotFound
@@ -53,6 +58,9 @@ func (s *MemoryOrderStore) Find(_ context.Context, id uuid.UUID) (domain.Order, 
 }
 
 func (s *MemoryOrderStore) FindByRestaurant(_ context.Context, restaurantID uuid.UUID) ([]domain.Order, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
 	var orders []domain.Order
 	for _, order := range s.data {
 		if order.RestaurantID == restaurantID {
@@ -63,6 +71,22 @@ func (s *MemoryOrderStore) FindByRestaurant(_ context.Context, restaurantID uuid
 }
 
 func (s *MemoryOrderStore) Update(_ context.Context, order domain.Order) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	s.data[order.ID] = order
 	return nil
+}
+
+func (s *MemoryOrderStore) GetAllOrders(_ context.Context, customerID uuid.UUID) ([]domain.Order, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	var orders []domain.Order
+	for _, order := range s.data {
+		if order.CustomerID == customerID {
+			orders = append(orders, order)
+		}
+	}
+	return orders, nil
 }
