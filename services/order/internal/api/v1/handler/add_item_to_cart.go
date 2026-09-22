@@ -15,7 +15,7 @@ import (
 type addItemToCartRequest struct {
 	RestaurantID uuid.UUID `json:"restaurant_id" validate:"required"`
 	Quantity     int       `json:"quantity"      validate:"required,min=1,max=10"`
-	Instructions string    `json:"instructions"`
+	Instructions string    `json:"instructions"  validate:"omitempty,max=250"`
 }
 
 func (h *Handler) addItemToCart(w http.ResponseWriter, r *http.Request) {
@@ -56,8 +56,19 @@ func (h *Handler) addItemToCart(w http.ResponseWriter, r *http.Request) {
 		log.ErrorContext(r.Context(), msg, "error", err)
 
 		if validationErr, ok := errors.AsType[validator.ValidationErrors](err); ok {
-			common.RespondJSON(log, w, http.StatusBadRequest, common.NewValidationError(validationErr))
-			return
+			for _, fe := range validationErr {
+				switch fe.Field() {
+				case "Instructions":
+					common.RespondJSON(log, w, http.StatusBadRequest, common.NewError(common.InvalidInstructionsErrorCode, "invalid instructions", nil))
+					return
+				case "Quantity":
+					common.RespondJSON(log, w, http.StatusBadRequest, common.NewError(common.InvalidQuantityErrorCode, "invalid quantity", nil))
+					return
+				default:
+					common.RespondJSON(log, w, http.StatusBadRequest, common.NewValidationError(validationErr))
+					return
+				}
+			}
 		}
 
 		log.ErrorContext(r.Context(), "failed to validate request", "error", err)
@@ -68,13 +79,6 @@ func (h *Handler) addItemToCart(w http.ResponseWriter, r *http.Request) {
 	cart, err := h.customer.AddItemToCart(r.Context(), customerID, req.RestaurantID, menuItemID, req.Quantity, req.Instructions)
 	if err != nil {
 		switch {
-		case errors.Is(err, domain.ErrInvalidInstructions):
-			common.RespondJSON(
-				log,
-				w,
-				http.StatusBadRequest,
-				common.NewError(common.InvalidInstructionsErrorCode, "invalid instructions", nil),
-			)
 		case errors.Is(err, domain.ErrCartLimit):
 			common.RespondJSON(
 				log,
@@ -89,7 +93,7 @@ func (h *Handler) addItemToCart(w http.ResponseWriter, r *http.Request) {
 				http.StatusConflict,
 				common.NewError(common.CartRestaurantConflictErrorCode, "order access denied", nil),
 			)
-		case errors.Is(err, domain.ErrItemNotAvailable):
+		case errors.Is(err, domain.ErrMenuItemNotAvailable):
 			common.RespondJSON(
 				log,
 				w,

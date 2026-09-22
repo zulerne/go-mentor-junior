@@ -8,7 +8,7 @@ import (
 )
 
 func (s *Service) RemoveItemFromCart(ctx context.Context, customerID uuid.UUID, menuItemID uuid.UUID) error {
-	cart, err := s.cartStore.FindCart(ctx, customerID)
+	cart, err := s.cartStore.Find(ctx, customerID)
 	if err != nil {
 		return err
 	}
@@ -26,5 +26,5 @@ func (s *Service) RemoveItemFromCart(ctx context.Context, customerID uuid.UUID, 
 		cart.Currency = ""
 	}
 
-	return s.cartStore.UpdateCart(ctx, customerID, cart)
+	return s.cartStore.Update(ctx, customerID, cart)
 }

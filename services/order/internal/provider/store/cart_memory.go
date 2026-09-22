@@ -47,7 +47,7 @@ func NewMemoryCartStore() *MemoryCartStore {
 	}
 }
 
-func (s *MemoryCartStore) FindCart(_ context.Context, customerID uuid.UUID) (domain.Cart, error) {
+func (s *MemoryCartStore) Find(_ context.Context, customerID uuid.UUID) (domain.Cart, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
@@ -60,7 +60,7 @@ func (s *MemoryCartStore) FindCart(_ context.Context, customerID uuid.UUID) (dom
 	return cart, nil
 }
 
-func (s *MemoryCartStore) UpdateCart(_ context.Context, customerID uuid.UUID, cart domain.Cart) error {
+func (s *MemoryCartStore) Update(_ context.Context, customerID uuid.UUID, cart domain.Cart) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 

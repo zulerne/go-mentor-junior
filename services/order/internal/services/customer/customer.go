@@ -14,12 +14,13 @@ type OrderStore interface {
 }
 
 type CartStore interface {
-	FindCart(ctx context.Context, customerID uuid.UUID) (domain.Cart, error)
-	UpdateCart(ctx context.Context, customerID uuid.UUID, cart domain.Cart) error
+	Find(ctx context.Context, customerID uuid.UUID) (domain.Cart, error)
+	Update(ctx context.Context, customerID uuid.UUID, cart domain.Cart) error
 }
 
 type RestaurantProvider interface {
-	Find(ctx context.Context, restaurantID uuid.UUID, menuItemID uuid.UUID) (domain.MenuItem, error)
+	Find(ctx context.Context, restaurantID uuid.UUID) (domain.Restaurant, error)
+	FindItem(ctx context.Context, restaurantID uuid.UUID, menuItemID uuid.UUID) (domain.MenuItem, error)
 }
 
 type Service struct {
