@@ -17,6 +17,7 @@ type rejectRestaurantOrderRequest struct {
 	Reason string `json:"reason" validate:"required"`
 }
 
+//nolint:funlen
 func (h *Handler) rejectRestaurantOrder(w http.ResponseWriter, r *http.Request) {
 	op := "handler.rejectRestaurantOrder"
 	requestID, _ := middleware.RequestIDFromContext(r.Context())
@@ -40,7 +41,8 @@ func (h *Handler) rejectRestaurantOrder(w http.ResponseWriter, r *http.Request) 
 	var req rejectRestaurantOrderRequest
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()
-	if err := decoder.Decode(&req); err != nil {
+	err = decoder.Decode(&req)
+	if err != nil {
 		msg := "failed to decode request"
 		log.ErrorContext(r.Context(), msg, "error", err)
 		common.RespondJSON(
@@ -54,7 +56,8 @@ func (h *Handler) rejectRestaurantOrder(w http.ResponseWriter, r *http.Request) 
 
 	log.DebugContext(r.Context(), "request received", "reason", req.Reason)
 
-	if err := h.validator.Struct(req); err != nil {
+	err = h.validator.Struct(req)
+	if err != nil {
 		msg := common.ValidationErrorCode
 		log.ErrorContext(r.Context(), msg, "error", err)
 
@@ -103,9 +106,8 @@ func (h *Handler) rejectRestaurantOrder(w http.ResponseWriter, r *http.Request) 
 				common.NewError(common.InvalidOrderTransitionErrorCode, "invalid order status", nil),
 			)
 		default:
-			msg := "failed to get order"
-			log.ErrorContext(r.Context(), msg, "error", err)
-			common.RespondJSON(log, w, http.StatusInternalServerError, common.NewBaseError(msg))
+			log.ErrorContext(r.Context(), errInternalMsg, "error", err)
+			common.RespondJSON(log, w, http.StatusInternalServerError, common.NewBaseError(errInternalMsg))
 		}
 
 		return

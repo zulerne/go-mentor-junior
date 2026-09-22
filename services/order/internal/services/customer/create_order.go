@@ -26,8 +26,9 @@ func (s *Service) CreateOrder(ctx context.Context, customerID uuid.UUID, deliver
 	}
 
 	cart.SubtotalMinor = 0
+	var item domain.MenuItem
 	for i, cartItem := range cart.Items {
-		item, err := s.restaurantProvider.FindItem(ctx, restaurant.ID, cartItem.MenuItemID)
+		item, err = s.restaurantProvider.FindItem(ctx, restaurant.ID, cartItem.MenuItemID)
 		if err != nil {
 			return domain.Order{}, err
 		}

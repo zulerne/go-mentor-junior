@@ -8,7 +8,14 @@ import (
 	"github.com/zulerne/go-mentor-junior/order/internal/domain"
 )
 
-func (s *Service) AddItemToCart(ctx context.Context, customerID uuid.UUID, restaurantID uuid.UUID, menuItemID uuid.UUID, quantity int, instructions string) (domain.Cart, error) {
+func (s *Service) AddItemToCart(
+	ctx context.Context,
+	customerID uuid.UUID,
+	restaurantID uuid.UUID,
+	menuItemID uuid.UUID,
+	quantity int32,
+	instructions string,
+) (domain.Cart, error) {
 	cart, err := s.cartStore.Find(ctx, customerID)
 	if err != nil || cart.RestaurantID == uuid.Nil {
 		cart = domain.Cart{RestaurantID: restaurantID}
@@ -16,7 +23,7 @@ func (s *Service) AddItemToCart(ctx context.Context, customerID uuid.UUID, resta
 		return domain.Cart{}, domain.ErrRestaurantIDMismatch
 	}
 
-	totalQuantity := int32(quantity)
+	totalQuantity := quantity
 	for i, cartItem := range cart.Items {
 		if cartItem.MenuItemID == menuItemID {
 			cart.Items = slices.Concat(cart.Items[:i], cart.Items[i+1:])
@@ -43,13 +50,14 @@ func (s *Service) AddItemToCart(ctx context.Context, customerID uuid.UUID, resta
 		Name:           item.Name,
 		UnitPriceMinor: item.PriceMinor,
 		Currency:       item.Currency,
-		Quantity:       int32(quantity),
+		Quantity:       quantity,
 		Instructions:   instructions,
 	})
 	cart.Currency = item.Currency
 	cart.SubtotalMinor += item.PriceMinor * int64(quantity)
 
-	if err := s.cartStore.Update(ctx, customerID, cart); err != nil {
+	err = s.cartStore.Update(ctx, customerID, cart)
+	if err != nil {
 		return domain.Cart{}, err
 	}
 

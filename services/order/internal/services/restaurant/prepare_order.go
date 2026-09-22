@@ -9,7 +9,6 @@ import (
 )
 
 func (r *Service) PrepareOrder(ctx context.Context, restaurantID uuid.UUID, orderID uuid.UUID) (domain.Order, error) {
-
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
@@ -31,7 +30,8 @@ func (r *Service) PrepareOrder(ctx context.Context, restaurantID uuid.UUID, orde
 	order.Status = domain.Preparing
 	// TODO: remove when bd is connected
 	order.UpdatedAt = time.Now().UTC()
-	if err := r.store.Update(ctx, order); err != nil {
+	err = r.store.Update(ctx, order)
+	if err != nil {
 		return domain.Order{}, err
 	}
 	return order, nil

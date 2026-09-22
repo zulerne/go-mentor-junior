@@ -56,9 +56,8 @@ func (h *Handler) cancelOrder(w http.ResponseWriter, r *http.Request) {
 				common.NewError(common.InvalidOrderTransitionErrorCode, "invalid order transition", nil),
 			)
 		default:
-			msg := "failed to get order"
-			log.ErrorContext(r.Context(), msg, "error", err)
-			common.RespondJSON(log, w, http.StatusInternalServerError, common.NewBaseError(msg))
+			log.ErrorContext(r.Context(), errInternalMsg, "error", err)
+			common.RespondJSON(log, w, http.StatusInternalServerError, common.NewBaseError(errInternalMsg))
 		}
 
 		return

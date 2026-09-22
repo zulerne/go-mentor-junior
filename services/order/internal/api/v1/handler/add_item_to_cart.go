@@ -14,10 +14,11 @@ import (
 
 type addItemToCartRequest struct {
 	RestaurantID uuid.UUID `json:"restaurant_id" validate:"required"`
-	Quantity     int       `json:"quantity"      validate:"required,min=1,max=10"`
+	Quantity     int32     `json:"quantity"      validate:"required,min=1,max=10"`
 	Instructions string    `json:"instructions"  validate:"omitempty,max=250"`
 }
 
+//nolint:funlen
 func (h *Handler) addItemToCart(w http.ResponseWriter, r *http.Request) {
 	op := "handler.addItemToCart"
 	requestID, _ := middleware.RequestIDFromContext(r.Context())
@@ -42,7 +43,8 @@ func (h *Handler) addItemToCart(w http.ResponseWriter, r *http.Request) {
 	// TODO: common decoder?
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()
-	if err := decoder.Decode(&req); err != nil {
+	err = decoder.Decode(&req)
+	if err != nil {
 		msg := "failed to decode request"
 		log.ErrorContext(r.Context(), msg, "error", err)
 		common.RespondJSON(log, w, http.StatusBadRequest, common.NewBaseError(msg))
@@ -51,7 +53,8 @@ func (h *Handler) addItemToCart(w http.ResponseWriter, r *http.Request) {
 
 	log.InfoContext(r.Context(), "request received")
 
-	if err := h.validator.Struct(req); err != nil {
+	err = h.validator.Struct(req)
+	if err != nil {
 		msg := common.ValidationErrorCode
 		log.ErrorContext(r.Context(), msg, "error", err)
 
@@ -59,10 +62,20 @@ func (h *Handler) addItemToCart(w http.ResponseWriter, r *http.Request) {
 			for _, fe := range validationErr {
 				switch fe.Field() {
 				case "Instructions":
-					common.RespondJSON(log, w, http.StatusBadRequest, common.NewError(common.InvalidInstructionsErrorCode, "invalid instructions", nil))
+					common.RespondJSON(
+						log,
+						w,
+						http.StatusBadRequest,
+						common.NewError(common.InvalidInstructionsErrorCode, "invalid instructions", nil),
+					)
 					return
 				case "Quantity":
-					common.RespondJSON(log, w, http.StatusBadRequest, common.NewError(common.InvalidQuantityErrorCode, "invalid quantity", nil))
+					common.RespondJSON(
+						log,
+						w,
+						http.StatusBadRequest,
+						common.NewError(common.InvalidQuantityErrorCode, "invalid quantity", nil),
+					)
 					return
 				default:
 					common.RespondJSON(log, w, http.StatusBadRequest, common.NewValidationError(validationErr))
@@ -76,7 +89,14 @@ func (h *Handler) addItemToCart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cart, err := h.customer.AddItemToCart(r.Context(), customerID, req.RestaurantID, menuItemID, req.Quantity, req.Instructions)
+	cart, err := h.customer.AddItemToCart(
+		r.Context(),
+		customerID,
+		req.RestaurantID,
+		menuItemID,
+		req.Quantity,
+		req.Instructions,
+	)
 	if err != nil {
 		switch {
 		case errors.Is(err, domain.ErrCartLimit):
@@ -101,9 +121,8 @@ func (h *Handler) addItemToCart(w http.ResponseWriter, r *http.Request) {
 				common.NewError(common.MenuItemUnavailableErrorCode, "item not available", nil),
 			)
 		default:
-			msg := "failed to get order"
-			log.ErrorContext(r.Context(), msg, "error", err)
-			common.RespondJSON(log, w, http.StatusInternalServerError, common.NewBaseError(msg))
+			log.ErrorContext(r.Context(), errInternalMsg, "error", err)
+			common.RespondJSON(log, w, http.StatusInternalServerError, common.NewBaseError(errInternalMsg))
 		}
 
 		return

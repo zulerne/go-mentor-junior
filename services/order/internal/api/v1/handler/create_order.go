@@ -16,6 +16,7 @@ type createOrderRequest struct {
 	DeliveryAddress string `json:"delivery_address" validate:"required,max=500"`
 }
 
+//nolint:funlen
 func (h *Handler) createOrder(w http.ResponseWriter, r *http.Request) {
 	op := "handler.createOrder"
 	requestID, _ := middleware.RequestIDFromContext(r.Context())
@@ -87,9 +88,8 @@ func (h *Handler) createOrder(w http.ResponseWriter, r *http.Request) {
 				"min order amount not met",
 				nil))
 		default:
-			msg := "failed to get order"
-			log.ErrorContext(r.Context(), msg, "error", err)
-			common.RespondJSON(log, w, http.StatusInternalServerError, common.NewBaseError(msg))
+			log.ErrorContext(r.Context(), errInternalMsg, "error", err)
+			common.RespondJSON(log, w, http.StatusInternalServerError, common.NewBaseError(errInternalMsg))
 		}
 
 		return

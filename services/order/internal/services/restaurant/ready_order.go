@@ -27,7 +27,8 @@ func (r *Service) ReadyOrder(ctx context.Context, restaurantID uuid.UUID, orderI
 		return domain.Order{}, domain.ErrInvalidOrderStatus
 	}
 
-	if err := r.deliveryProvider.Start(ctx, orderID); err != nil {
+	err = r.deliveryProvider.Start(ctx, orderID)
+	if err != nil {
 		return domain.Order{}, domain.ErrDeliveryProvider
 	}
 
@@ -35,9 +36,9 @@ func (r *Service) ReadyOrder(ctx context.Context, restaurantID uuid.UUID, orderI
 	order.DeliveryStatus = domain.InDelivery
 	// TODO: remove when bd is connected
 	order.UpdatedAt = time.Now().UTC()
-	if err := r.store.Update(ctx, order); err != nil {
+	err = r.store.Update(ctx, order)
+	if err != nil {
 		return domain.Order{}, err
 	}
 	return order, nil
-
 }

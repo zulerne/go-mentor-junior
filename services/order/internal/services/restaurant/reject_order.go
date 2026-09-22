@@ -8,7 +8,12 @@ import (
 	"github.com/zulerne/go-mentor-junior/order/internal/domain"
 )
 
-func (r *Service) RejectOrder(ctx context.Context, restaurantID uuid.UUID, orderID uuid.UUID, reason string) (domain.Order, error) {
+func (r *Service) RejectOrder(
+	ctx context.Context,
+	restaurantID uuid.UUID,
+	orderID uuid.UUID,
+	reason string,
+) (domain.Order, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
@@ -31,7 +36,8 @@ func (r *Service) RejectOrder(ctx context.Context, restaurantID uuid.UUID, order
 	order.RejectionReason = reason
 	// TODO: remove when bd is connected
 	order.UpdatedAt = time.Now().UTC()
-	if err := r.store.Update(ctx, order); err != nil {
+	err = r.store.Update(ctx, order)
+	if err != nil {
 		return domain.Order{}, err
 	}
 	return order, nil
