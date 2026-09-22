@@ -56,7 +56,6 @@ func main() {
 	}
 }
 
-// TODO(review): норм я подрефакторил грейсфул с ерроргрупой? По мне кажется чище\изящнее. Что скажешь?
 func run(log *slog.Logger, srv *http.Server, shutdownTimeout time.Duration) error {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
