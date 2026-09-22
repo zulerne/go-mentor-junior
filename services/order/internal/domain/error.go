@@ -5,6 +5,7 @@ import "errors"
 var ErrOrderNotFound = errors.New("order not found")
 var ErrInvalidOrderStatus = errors.New("invalid order status")
 var ErrOrderAccessDenied = errors.New("order access denied")
+var ErrOrderAlreadyCancelled = errors.New("order already cancelled")
 
 var ErrCustomerNotFound = errors.New("customer not found")
 
