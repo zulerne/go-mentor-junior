@@ -28,6 +28,7 @@ func (r *Service) AcceptOrder(ctx context.Context, restaurantID uuid.UUID, order
 	}
 
 	if err := r.deliveryProvider.Create(ctx, orderID); err != nil {
+		// TODO: -> err
 		return domain.Order{}, domain.ErrDeliveryProvider
 	}
 

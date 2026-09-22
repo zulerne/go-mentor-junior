@@ -10,18 +10,12 @@ import (
 
 type OrderStore interface {
 	Find(ctx context.Context, id uuid.UUID) (domain.Order, error)
+	Update(ctx context.Context, order domain.Order) error
 }
 
 type CartStore interface {
 	FindCart(ctx context.Context, customerID uuid.UUID) (domain.Cart, error)
-	AddItem(
-		ctx context.Context,
-		restaurantID uuid.UUID,
-		customerID uuid.UUID,
-		menuItem domain.MenuItem,
-		quantity int,
-		instructions string,
-	) error
+	UpdateCart(ctx context.Context, customerID uuid.UUID, cart domain.Cart) error
 }
 
 type RestaurantProvider interface {

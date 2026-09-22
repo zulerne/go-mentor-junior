@@ -28,6 +28,15 @@ func (h *Handler) rejectRestaurantOrder(w http.ResponseWriter, r *http.Request) 
 		"restaurant_id", restaurantID,
 	)
 
+	orderID, err := uuid.Parse(r.PathValue(orderIDKey))
+	if err != nil {
+		msg := common.OrderIDRequiredErrorCode
+		log.ErrorContext(r.Context(), msg)
+		common.RespondJSON(log, w, http.StatusBadRequest, common.NewBaseError(msg))
+		return
+	}
+	log = log.With("order_id", orderID)
+
 	var req rejectRestaurantOrderRequest
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()
@@ -42,15 +51,6 @@ func (h *Handler) rejectRestaurantOrder(w http.ResponseWriter, r *http.Request) 
 		)
 		return
 	}
-
-	orderID, err := uuid.Parse(r.PathValue(orderIDKey))
-	if err != nil {
-		msg := common.OrderIDRequiredErrorCode
-		log.ErrorContext(r.Context(), msg)
-		common.RespondJSON(log, w, http.StatusBadRequest, common.NewBaseError(msg))
-		return
-	}
-	log = log.With("order_id", orderID)
 
 	log.DebugContext(r.Context(), "request received", "reason", req.Reason)
 

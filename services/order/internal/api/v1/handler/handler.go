@@ -19,6 +19,12 @@ const (
 
 type Customer interface {
 	GetCart(ctx context.Context, customerID uuid.UUID) (domain.Cart, error)
+	AddItemToCart(ctx context.Context, customerID uuid.UUID, restaurantID uuid.UUID, menuItemID uuid.UUID, quantity int, instructions string) (domain.Cart, error)
+	RemoveItemFromCart(ctx context.Context, customerID uuid.UUID, menuItemID uuid.UUID) (domain.Cart, error)
+	CreateOrder(ctx context.Context, customerID uuid.UUID) (domain.Order, error)
+	GetOrder(ctx context.Context, customerID uuid.UUID, orderID uuid.UUID) (domain.Order, error)
+	GetAllOrders(ctx context.Context, customerID uuid.UUID) ([]domain.Order, error)
+	CancelOrder(ctx context.Context, customerID uuid.UUID, orderID uuid.UUID) (domain.Order, error)
 }
 
 type Restaurant interface {

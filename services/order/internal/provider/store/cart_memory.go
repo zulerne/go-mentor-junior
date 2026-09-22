@@ -47,65 +47,23 @@ func NewMemoryCartStore() *MemoryCartStore {
 	}
 }
 
-func (s *MemoryCartStore) AddItem(
-	_ context.Context,
-	restaurantID uuid.UUID,
-	customerID uuid.UUID,
-	menuItem domain.MenuItem,
-	quantity int,
-	instructions string,
-) error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	cart, ok := s.data[customerID]
-	if !ok {
-		cart = domain.Cart{
-			RestaurantID:  restaurantID,
-			Items:         []domain.CartItem{},
-			SubtotalMinor: 0,
-			Currency:      menuItem.Currency,
-		}
-	}
-	s.data[customerID] = cart
-
-	for i := range cart.Items {
-		if cart.Items[i].MenuItemID == menuItem.ID {
-			oldPrice, oldQuantity := cart.Items[i].UnitPriceMinor, cart.Items[i].Quantity
-			cart.Items[i].UnitPriceMinor = menuItem.PriceMinor
-			cart.Items[i].Quantity = int32(quantity)
-			cart.SubtotalMinor -= int64(oldQuantity) * oldPrice
-			cart.SubtotalMinor += int64(quantity) * menuItem.PriceMinor
-
-			cart.Items[i].Name = menuItem.Name
-			cart.Items[i].Instructions = instructions
-			s.data[customerID] = cart
-			return nil
-		}
-	}
-
-	cart.Items = append(cart.Items, domain.CartItem{
-		MenuItemID:     menuItem.ID,
-		Name:           menuItem.Name,
-		Quantity:       int32(quantity),
-		UnitPriceMinor: menuItem.PriceMinor,
-		Currency:       menuItem.Currency,
-		Instructions:   instructions,
-	})
-	cart.SubtotalMinor += int64(quantity) * menuItem.PriceMinor
-	s.data[customerID] = cart
-	return nil
-}
-
 func (s *MemoryCartStore) FindCart(_ context.Context, customerID uuid.UUID) (domain.Cart, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
 	cart, ok := s.data[customerID]
 	if !ok {
-		return domain.Cart{}, nil
+		return domain.Cart{}, domain.ErrCartNotFound
 	}
 
 	cart.Items = slices.Clone(cart.Items)
 	return cart, nil
+}
+
+func (s *MemoryCartStore) UpdateCart(_ context.Context, customerID uuid.UUID, cart domain.Cart) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	s.data[customerID] = cart
+	return nil
 }

@@ -45,11 +45,11 @@ func NewMemoryProvider() *MemoryProvider {
 func (r *MemoryProvider) Find(_ context.Context, restaurantID uuid.UUID, menuItemID uuid.UUID) (domain.MenuItem, error) {
 	items, ok := r.data[restaurantID]
 	if !ok {
-		return domain.MenuItem{}, nil
+		return domain.MenuItem{}, domain.ErrRestaurantNotFound
 	}
 	item, ok := items[menuItemID]
 	if !ok {
-		return domain.MenuItem{}, nil
+		return domain.MenuItem{}, domain.ErrMenuItemNotFound
 	}
 	return item, nil
 }

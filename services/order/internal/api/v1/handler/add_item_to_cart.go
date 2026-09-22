@@ -6,14 +6,16 @@ import (
 	"net/http"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/google/uuid"
 	"github.com/zulerne/go-mentor-junior/order/internal/api/common"
 	"github.com/zulerne/go-mentor-junior/order/internal/api/middleware"
+	"github.com/zulerne/go-mentor-junior/order/internal/domain"
 )
 
 type addItemToCartRequest struct {
-	RestaurantID string `json:"restaurant_id" validate:"required"`
-	Quantity     int    `json:"quantity"      validate:"required"`
-	Instructions string `json:"instructions"`
+	RestaurantID uuid.UUID `json:"restaurant_id" validate:"required"`
+	Quantity     int       `json:"quantity"      validate:"required,min=1,max=10"`
+	Instructions string    `json:"instructions"`
 }
 
 func (h *Handler) addItemToCart(w http.ResponseWriter, r *http.Request) {
@@ -27,16 +29,17 @@ func (h *Handler) addItemToCart(w http.ResponseWriter, r *http.Request) {
 		"customer_id", customerID,
 	)
 
-	menuItemID := r.PathValue(menuItemIDKey)
-	if menuItemID == "" {
-		msg := "menu item id is required"
+	menuItemID, err := uuid.Parse(r.PathValue(menuItemIDKey))
+	if err != nil {
+		msg := common.MenuItemRequiredErrorCode
 		log.ErrorContext(r.Context(), msg)
 		common.RespondJSON(log, w, http.StatusBadRequest, common.NewBaseError(msg))
 		return
 	}
-	log.DebugContext(r.Context(), "menu item id parsed", "menu_item_id", menuItemID)
+	log = log.With("order_id", menuItemID)
 
 	var req addItemToCartRequest
+	// TODO: common decoder?
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()
 	if err := decoder.Decode(&req); err != nil {
@@ -62,15 +65,62 @@ func (h *Handler) addItemToCart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// cart, err := h.cartService.AddItemToCart(r.Context(), req.ItemID, req.Quantity)
-	// if err != nil {
-	// 	msg := "failed to add item to cart"
-	// 	log.Error(msg, "error", err)
-	// 	h.baseError(w, http.StatusInternalServerError, msg)
-	// 	return
-	// }
+	cart, err := h.customer.AddItemToCart(r.Context(), customerID, req.RestaurantID, menuItemID, req.Quantity, req.Instructions)
+	if err != nil {
+		switch {
+		case errors.Is(err, domain.ErrInvalidInstructions):
+			common.RespondJSON(
+				log,
+				w,
+				http.StatusBadRequest,
+				common.NewError(common.InvalidInstructionsErrorCode, "invalid instructions", nil),
+			)
+		case errors.Is(err, domain.ErrCartLimit):
+			common.RespondJSON(
+				log,
+				w,
+				http.StatusUnprocessableEntity,
+				common.NewError(common.CartLimitExceededErrorCode, "invalid quantity", nil),
+			)
+		case errors.Is(err, domain.ErrRestaurantIDMismatch):
+			common.RespondJSON(
+				log,
+				w,
+				http.StatusConflict,
+				common.NewError(common.CartRestaurantConflictErrorCode, "order access denied", nil),
+			)
+		case errors.Is(err, domain.ErrItemNotAvailable):
+			common.RespondJSON(
+				log,
+				w,
+				http.StatusUnprocessableEntity,
+				common.NewError(common.MenuItemUnavailableErrorCode, "item not available", nil),
+			)
+		default:
+			msg := "failed to get order"
+			log.ErrorContext(r.Context(), msg, "error", err)
+			common.RespondJSON(log, w, http.StatusInternalServerError, common.NewBaseError(msg))
+		}
+
+		return
+	}
+
+	cartItems := make([]CartItem, 0, len(cart.Items))
+	for _, item := range cart.Items {
+		cartItems = append(cartItems, CartItem{
+			MenuItemID:     item.MenuItemID.String(),
+			Name:           item.Name,
+			UnitPriceMinor: item.UnitPriceMinor,
+			Currency:       item.Currency,
+			Quantity:       item.Quantity,
+			Instructions:   item.Instructions,
+		})
+	}
 
 	common.RespondJSON(log, w, http.StatusOK, CartResponse{
-		Items: []CartItem{},
+		RestaurantID:  cart.RestaurantID.String(),
+		Items:         cartItems,
+		SubtotalMinor: cart.SubtotalMinor,
+		Currency:      cart.Currency,
 	})
 }
