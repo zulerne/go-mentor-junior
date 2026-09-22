@@ -5,7 +5,6 @@ import "errors"
 var ErrOrderNotFound = errors.New("order not found")
 var ErrInvalidOrderStatus = errors.New("invalid order status")
 var ErrOrderAccessDenied = errors.New("order access denied")
-var ErrOrderAlreadyCancelled = errors.New("order already cancelled")
 
 var ErrCustomerNotFound = errors.New("customer not found")
 
@@ -22,4 +21,3 @@ var ErrInvalidDeliveryAddress = errors.New("invalid delivery address")
 var ErrCartNotFound = errors.New("cart not found")
 var ErrCartLimit = errors.New("invalid quantity")
 var ErrCartEmpty = errors.New("cart empty")
-var ErrInvalidInstructions = errors.New("invalid instructions")
