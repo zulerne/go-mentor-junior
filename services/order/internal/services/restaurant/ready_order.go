@@ -7,7 +7,7 @@ import (
 	"github.com/zulerne/go-mentor-junior/order/internal/domain"
 )
 
-func (r *Service) ReadyOrder(ctx context.Context, restaurantID uuid.UUID, orderID uuid.UUID, reason string) (domain.Order, error) {
+func (r *Service) ReadyOrder(ctx context.Context, restaurantID uuid.UUID, orderID uuid.UUID) (domain.Order, error) {
 	return domain.Order{}, nil
 
 }

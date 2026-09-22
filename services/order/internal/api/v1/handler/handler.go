@@ -25,8 +25,8 @@ type Restaurant interface {
 	GetOrders(ctx context.Context, restaurantID uuid.UUID) ([]domain.Order, error)
 	AcceptOrder(ctx context.Context, restaurantID uuid.UUID, orderID uuid.UUID) (domain.Order, error)
 	RejectOrder(ctx context.Context, restaurantID uuid.UUID, orderID uuid.UUID, reason string) (domain.Order, error)
-	StartPreparingOrder(ctx context.Context, restaurantID uuid.UUID, orderID uuid.UUID, reason string) (domain.Order, error)
-	ReadyOrder(ctx context.Context, restaurantID uuid.UUID, orderID uuid.UUID, reason string) (domain.Order, error)
+	PrepareOrder(ctx context.Context, restaurantID uuid.UUID, orderID uuid.UUID) (domain.Order, error)
+	ReadyOrder(ctx context.Context, restaurantID uuid.UUID, orderID uuid.UUID) (domain.Order, error)
 }
 
 // Handler holds all dependencies for HTTP handlers.
