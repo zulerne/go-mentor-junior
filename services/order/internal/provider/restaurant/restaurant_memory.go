@@ -8,6 +8,7 @@ import (
 )
 
 type MemoryProvider struct {
+	meta map[uuid.UUID]domain.Restaurant
 	data map[uuid.UUID]map[uuid.UUID]domain.MenuItem
 }
 
@@ -39,10 +40,28 @@ func NewMemoryProvider() *MemoryProvider {
 			Available:   true,
 		},
 	}
-	return &MemoryProvider{data: menuItems}
+
+	meta := map[uuid.UUID]domain.Restaurant{
+		restaurantId: {
+			ID:                restaurantId,
+			Name:              "Pasta Palace",
+			AcceptingOrders:   true,
+			MinimumOrderMinor: 100,
+			Currency:          "USD",
+		},
+	}
+	return &MemoryProvider{meta: meta, data: menuItems}
 }
 
-func (r *MemoryProvider) Find(_ context.Context, restaurantID uuid.UUID, menuItemID uuid.UUID) (domain.MenuItem, error) {
+func (r *MemoryProvider) Find(_ context.Context, restaurantID uuid.UUID) (domain.Restaurant, error) {
+	restaurant, ok := r.meta[restaurantID]
+	if !ok {
+		return domain.Restaurant{}, domain.ErrRestaurantNotFound
+	}
+	return restaurant, nil
+}
+
+func (r *MemoryProvider) FindItem(_ context.Context, restaurantID uuid.UUID, menuItemID uuid.UUID) (domain.MenuItem, error) {
 	items, ok := r.data[restaurantID]
 	if !ok {
 		return domain.MenuItem{}, domain.ErrRestaurantNotFound
