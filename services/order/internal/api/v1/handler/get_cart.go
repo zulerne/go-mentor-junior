@@ -27,27 +27,27 @@ func (h *Handler) getCart(w http.ResponseWriter, r *http.Request) {
 		customerID,
 	)
 	if err != nil {
-		if errors.Is(err, domain.ErrOrderNotFound) {
+		switch {
+		case errors.Is(err, domain.ErrCartNotFound):
 			common.RespondJSON(
 				log,
 				w,
-				http.StatusNotFound,
-				common.NewError(common.CustomerNotFoundErrorCode, "customer not found", nil),
+				http.StatusOK,
+				CartResponse{},
 			)
-			return
+		default:
+			msg := "failed to get cart"
+			log.ErrorContext(r.Context(), msg, "error", err)
+			common.RespondJSON(
+				log,
+				w,
+				http.StatusInternalServerError,
+				common.NewBaseError(msg),
+			)
 		}
 
-		msg := "failed to get cart"
-		log.ErrorContext(r.Context(), msg, "error", err)
-		common.RespondJSON(
-			log,
-			w,
-			http.StatusInternalServerError,
-			common.NewBaseError(msg),
-		)
 		return
 	}
-
 	cartItems := make([]CartItem, 0, len(cart.Items))
 	for _, item := range cart.Items {
 		cartItems = append(cartItems, CartItem{

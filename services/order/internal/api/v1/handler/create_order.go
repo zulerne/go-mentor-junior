@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/go-playground/validator/v10"
@@ -40,6 +41,8 @@ func (h *Handler) createOrder(w http.ResponseWriter, r *http.Request) {
 
 	log.InfoContext(r.Context(), "request received", "req", req)
 
+	req.DeliveryAddress = strings.TrimSpace(req.DeliveryAddress)
+
 	if err := h.validator.Struct(req); err != nil {
 		msg := common.ValidationErrorCode
 		log.ErrorContext(r.Context(), msg, "error", err)
@@ -51,6 +54,11 @@ func (h *Handler) createOrder(w http.ResponseWriter, r *http.Request) {
 
 		log.ErrorContext(r.Context(), "failed to validate request", "error", err)
 		common.RespondJSON(log, w, http.StatusInternalServerError, common.NewBaseError("server error"))
+		return
+	}
+
+	if req.DeliveryAddress == "" {
+		common.RespondJSON(log, w, http.StatusBadRequest, common.NewError(common.InvalidDeliveryAddressErrorCode, "delivery address is required", nil))
 		return
 	}
 
@@ -106,7 +114,7 @@ func (h *Handler) createOrder(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	common.RespondJSON(log, w, http.StatusOK, OrderResponse{
+	common.RespondJSON(log, w, http.StatusCreated, OrderResponse{
 		ID:              order.ID.String(),
 		CustomerID:      order.CustomerID.String(),
 		RestaurantID:    order.RestaurantID.String(),
