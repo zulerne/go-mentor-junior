@@ -20,7 +20,7 @@ func (s *Service) AddItemToCart(
 	if err != nil || cart.RestaurantID == uuid.Nil {
 		cart = domain.Cart{RestaurantID: restaurantID}
 	} else if cart.RestaurantID != restaurantID {
-		return domain.Cart{}, domain.ErrRestaurantIDMismatch
+		return domain.Cart{}, domain.ErrOrderAccessDenied
 	}
 
 	totalQuantity := quantity

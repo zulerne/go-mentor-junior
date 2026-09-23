@@ -41,14 +41,14 @@ func (h *Handler) prepareRestaurantOrder(w http.ResponseWriter, r *http.Request)
 				http.StatusNotFound,
 				common.NewError(common.OrderNotFoundErrorCode, "order not found", nil),
 			)
-		case errors.Is(err, domain.ErrRestaurantIDMismatch):
+		case errors.Is(err, domain.ErrOrderAccessDenied):
 			common.RespondJSON(
 				log,
 				w,
 				http.StatusForbidden,
 				common.NewError(common.OrderAccessDeniedErrorCode, "order access denied", nil),
 			)
-		case errors.Is(err, domain.ErrInvalidOrderStatus):
+		case errors.Is(err, domain.ErrInvalidOrderTransition):
 			common.RespondJSON(
 				log,
 				w,

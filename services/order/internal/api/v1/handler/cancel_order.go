@@ -48,7 +48,7 @@ func (h *Handler) cancelOrder(w http.ResponseWriter, r *http.Request) {
 				http.StatusForbidden,
 				common.NewError(common.OrderAccessDeniedErrorCode, "order access denied", nil),
 			)
-		case errors.Is(err, domain.ErrInvalidOrderStatus):
+		case errors.Is(err, domain.ErrInvalidOrderTransition):
 			common.RespondJSON(
 				log,
 				w,

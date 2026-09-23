@@ -17,14 +17,14 @@ func (r *Service) ReadyOrder(ctx context.Context, restaurantID uuid.UUID, orderI
 		return domain.Order{}, err
 	}
 	if restaurantID != order.RestaurantID {
-		return domain.Order{}, domain.ErrRestaurantIDMismatch
+		return domain.Order{}, domain.ErrOrderAccessDenied
 	}
 
 	if order.Status == domain.ReadyForPickup {
 		return order, nil
 	}
 	if order.Status != domain.Preparing {
-		return domain.Order{}, domain.ErrInvalidOrderStatus
+		return domain.Order{}, domain.ErrInvalidOrderTransition
 	}
 
 	err = r.deliveryProvider.Start(ctx, orderID)

@@ -22,14 +22,14 @@ func (r *Service) RejectOrder(
 		return domain.Order{}, err
 	}
 	if restaurantID != order.RestaurantID {
-		return domain.Order{}, domain.ErrRestaurantIDMismatch
+		return domain.Order{}, domain.ErrOrderAccessDenied
 	}
 
 	if order.Status == domain.Rejected {
 		return order, nil
 	}
 	if order.Status != domain.Pending {
-		return domain.Order{}, domain.ErrInvalidOrderStatus
+		return domain.Order{}, domain.ErrInvalidOrderTransition
 	}
 
 	order.Status = domain.Rejected

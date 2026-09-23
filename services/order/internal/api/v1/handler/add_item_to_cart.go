@@ -106,7 +106,7 @@ func (h *Handler) addItemToCart(w http.ResponseWriter, r *http.Request) {
 				http.StatusUnprocessableEntity,
 				common.NewError(common.CartLimitExceededErrorCode, "invalid quantity", nil),
 			)
-		case errors.Is(err, domain.ErrRestaurantIDMismatch):
+		case errors.Is(err, domain.ErrOrderAccessDenied):
 			common.RespondJSON(
 				log,
 				w,

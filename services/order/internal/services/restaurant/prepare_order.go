@@ -17,14 +17,14 @@ func (r *Service) PrepareOrder(ctx context.Context, restaurantID uuid.UUID, orde
 		return domain.Order{}, err
 	}
 	if restaurantID != order.RestaurantID {
-		return domain.Order{}, domain.ErrRestaurantIDMismatch
+		return domain.Order{}, domain.ErrOrderAccessDenied
 	}
 
 	if order.Status == domain.Preparing {
 		return order, nil
 	}
 	if order.Status != domain.Accepted {
-		return domain.Order{}, domain.ErrInvalidOrderStatus
+		return domain.Order{}, domain.ErrInvalidOrderTransition
 	}
 
 	order.Status = domain.Preparing

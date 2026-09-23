@@ -20,7 +20,7 @@ func (s *Service) CancelOrder(ctx context.Context, customerID, orderID uuid.UUID
 		return order, nil
 	}
 	if order.Status != domain.Pending {
-		return domain.Order{}, domain.ErrInvalidOrderStatus
+		return domain.Order{}, domain.ErrInvalidOrderTransition
 	}
 
 	order.Status = domain.Cancelled

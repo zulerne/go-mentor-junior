@@ -1,5 +1,7 @@
 package handler
 
+//go:generate go run github.com/vektra/mockery/v3@v3.8.0
+
 import (
 	"context"
 	"log/slog"
@@ -18,6 +20,9 @@ const (
 	errInternalMsg = "internal server error"
 )
 
+// Customer describes customer-facing operations.
+//
+//mockery:generate: true
 type Customer interface {
 	GetCart(ctx context.Context, customerID uuid.UUID) (domain.Cart, error)
 	AddItemToCart(
@@ -35,6 +40,9 @@ type Customer interface {
 	CancelOrder(ctx context.Context, customerID uuid.UUID, orderID uuid.UUID) (domain.Order, error)
 }
 
+// Restaurant describes restaurant-facing operations.
+//
+//mockery:generate: true
 type Restaurant interface {
 	GetOrders(ctx context.Context, restaurantID uuid.UUID) ([]domain.Order, error)
 	AcceptOrder(ctx context.Context, restaurantID uuid.UUID, orderID uuid.UUID) (domain.Order, error)

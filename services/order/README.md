@@ -74,6 +74,12 @@ task test-race
 task coverage
 ```
 
+### Regenerate mocks
+
+```bash
+go generate ./...
+```
+
 ## Project Structure
 
 ```

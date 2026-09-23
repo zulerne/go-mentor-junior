@@ -49,14 +49,14 @@ func (h *Handler) acceptRestaurantOrder(w http.ResponseWriter, r *http.Request) 
 				http.StatusServiceUnavailable,
 				common.NewError(common.DeliveryCreationFailedErrorCode, "delivery creation failed", nil),
 			)
-		case errors.Is(err, domain.ErrRestaurantIDMismatch):
+		case errors.Is(err, domain.ErrOrderAccessDenied):
 			common.RespondJSON(
 				log,
 				w,
 				http.StatusForbidden,
 				common.NewError(common.OrderAccessDeniedErrorCode, "order access denied", nil),
 			)
-		case errors.Is(err, domain.ErrInvalidOrderStatus):
+		case errors.Is(err, domain.ErrInvalidOrderTransition):
 			common.RespondJSON(
 				log,
 				w,

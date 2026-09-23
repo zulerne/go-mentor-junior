@@ -17,14 +17,14 @@ func (r *Service) AcceptOrder(ctx context.Context, restaurantID uuid.UUID, order
 		return domain.Order{}, err
 	}
 	if restaurantID != order.RestaurantID {
-		return domain.Order{}, domain.ErrRestaurantIDMismatch
+		return domain.Order{}, domain.ErrOrderAccessDenied
 	}
 
 	if order.Status == domain.Accepted {
 		return order, nil
 	}
 	if order.Status != domain.Pending {
-		return domain.Order{}, domain.ErrInvalidOrderStatus
+		return domain.Order{}, domain.ErrInvalidOrderTransition
 	}
 
 	err = r.deliveryProvider.Create(ctx, orderID)

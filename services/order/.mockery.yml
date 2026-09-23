@@ -1,0 +1,19 @@
+all: false
+dir: '{{.InterfaceDir}}'
+filename: mocks_test.go
+force-file-write: true
+formatter: goimports
+generate: false
+include-auto-generated: false
+log-level: info
+structname: '{{.Mock}}{{.InterfaceName}}'
+pkgname: '{{.SrcPackageName}}_test'
+recursive: false
+require-template-schema-exists: true
+template: testify
+template-schema: '{{.Template}}.schema.json'
+
+packages:
+  github.com/zulerne/go-mentor-junior/order/internal/api/v1/handler:
+  github.com/zulerne/go-mentor-junior/order/internal/services/customer:
+  github.com/zulerne/go-mentor-junior/order/internal/services/restaurant:

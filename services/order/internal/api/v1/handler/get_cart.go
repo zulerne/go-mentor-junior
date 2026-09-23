@@ -33,7 +33,9 @@ func (h *Handler) getCart(w http.ResponseWriter, r *http.Request) {
 				log,
 				w,
 				http.StatusOK,
-				CartResponse{},
+				CartResponse{
+					Items: []CartItem{},
+				},
 			)
 		default:
 			msg := "failed to get cart"
