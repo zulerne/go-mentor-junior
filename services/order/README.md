@@ -68,6 +68,12 @@ task test
 task test-race
 ```
 
+### Coverage
+
+```bash
+task coverage
+```
+
 ## Project Structure
 
 ```
