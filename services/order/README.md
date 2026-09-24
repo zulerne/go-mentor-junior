@@ -9,11 +9,20 @@ Order Service manages carts, orders, restaurant decisions, and delivery requests
 
 ## Configuration
 
-Configure the service using environment variables. See `.env.example` for available configuration options.
+Configuration is loaded from environment variables with the `` prefix. Defaults are built in.
+
+| Variable | Default | Description |
+|---|---|---|
+| `ENV` | `local` | Environment: `local` \| `production` |
+| `HTTP_ADDRESS` | `:8080` | HTTP listen address |
+| `HTTP_TIMEOUT` | `5s` | Read/write timeout |
+| `HTTP_IDLETIMEOUT` | `60s` | Idle connection timeout |
+| `HTTP_SHUTDOWNTIMEOUT` | `10s` | Graceful shutdown timeout |
+
+Copy `.env.example` to `.env` for local overrides — Taskfile loads it automatically:
 
 ```bash
 cp .env.example .env
-# Edit .env with your settings
 ```
 
 ## Build and Run

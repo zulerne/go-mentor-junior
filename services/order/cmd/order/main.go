@@ -43,14 +43,14 @@ func main() {
 
 	h := handler.New(customer, restaurant, validate, log)
 	srv := &http.Server{
-		Addr:         cfg.HTTPConfig.Address,
+		Addr:         cfg.HTTP.Address,
 		Handler:      h.Routes(),
-		WriteTimeout: cfg.HTTPConfig.Timeout,
-		ReadTimeout:  cfg.HTTPConfig.Timeout,
-		IdleTimeout:  cfg.HTTPConfig.IdleTimeout,
+		WriteTimeout: cfg.HTTP.Timeout,
+		ReadTimeout:  cfg.HTTP.Timeout,
+		IdleTimeout:  cfg.HTTP.IdleTimeout,
 	}
 
-	if err = run(log, srv, cfg.HTTPConfig.ShutdownTimeout); err != nil {
+	if err = run(log, srv, cfg.HTTP.ShutdownTimeout); err != nil {
 		log.Error("server error", "error", err)
 		os.Exit(1)
 	}
