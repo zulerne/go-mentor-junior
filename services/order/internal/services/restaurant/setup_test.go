@@ -15,7 +15,7 @@ var (
 	testMenuItemID   = uuid.MustParse("58185771-1f9f-4d71-9609-bdacea1deb2e")
 )
 
-func newCustomer(orderStore restaurant.OrderStore, delivery restaurant.DeliveryProvider) *restaurant.Service {
+func newRestaurant(orderStore restaurant.OrderStore, delivery restaurant.DeliveryProvider) *restaurant.Service {
 	log := slog.New(slog.NewTextHandler(io.Discard, nil))
 	return restaurant.New(orderStore, delivery, log)
 }
