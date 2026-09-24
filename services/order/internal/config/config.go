@@ -1,88 +1,67 @@
 package config
 
 import (
-	"errors"
 	"fmt"
-	"os"
+	"strings"
 	"time"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/knadh/koanf/providers/confmap"
+	"github.com/knadh/koanf/providers/env"
+	"github.com/knadh/koanf/v2"
 )
 
 const (
 	EnvLocal = "local"
 	EnvProd  = "production"
-)
 
-const (
-	defaultTimeout         = 5 * time.Second
-	defaultIdleTimeout     = 60 * time.Second
-	defaultShutdownTimeout = 10 * time.Second
+	envPrefix = ""
 )
 
 type Config struct {
-	Env        string     `validate:"required,oneof=local production"`
-	HTTPConfig HTTPConfig `validate:"omitempty"`
+	Env  string     `koanf:"env"  validate:"required,oneof=local production"`
+	HTTP HTTPConfig `koanf:"http" validate:"omitempty"`
 }
 
 type HTTPConfig struct {
-	Address         string        `validate:"omitempty"`
-	Timeout         time.Duration `validate:"omitempty"`
-	IdleTimeout     time.Duration `validate:"omitempty"`
-	ShutdownTimeout time.Duration `validate:"omitempty"`
+	Address         string        `koanf:"address"`
+	Timeout         time.Duration `koanf:"timeout"`
+	IdleTimeout     time.Duration `koanf:"idletimeout"`
+	ShutdownTimeout time.Duration `koanf:"shutdowntimeout"`
 }
 
-func Load(validator *validator.Validate) (*Config, error) {
-	var errs []error
-
-	timeout, err := parseDuration(os.Getenv("HTTP_TIMEOUT"), defaultTimeout)
-	if err != nil {
-		errs = append(errs, fmt.Errorf("failed to parse HTTP_TIMEOUT: %w", err))
-	}
-	idleTimeout, err := parseDuration(os.Getenv("HTTP_IDLE_TIMEOUT"), defaultIdleTimeout)
-	if err != nil {
-		errs = append(errs, fmt.Errorf("failed to parse HTTP_IDLE_TIMEOUT: %w", err))
-	}
-	shutdownTimeout, err := parseDuration(os.Getenv("HTTP_SHUTDOWN_TIMEOUT"), defaultShutdownTimeout)
-	if err != nil {
-		errs = append(errs, fmt.Errorf("failed to parse HTTP_SHUTDOWN_TIMEOUT: %w", err))
-	}
-
-	cfg := &Config{
-		Env: parseString(os.Getenv("ENV"), EnvLocal),
-		HTTPConfig: HTTPConfig{
-			Address:         parseString(os.Getenv("HTTP_ADDR"), ":8080"),
-			Timeout:         timeout,
-			IdleTimeout:     idleTimeout,
-			ShutdownTimeout: shutdownTimeout,
-		},
-	}
-
-	if err = validator.Struct(cfg); err != nil {
-		errs = append(errs, fmt.Errorf("failed to validate config: %w", err))
-	}
-
-	if len(errs) > 0 {
-		return nil, errors.Join(errs...)
-	}
-
-	return cfg, nil
+var defaults = map[string]any{
+	"env":                  EnvLocal,
+	"http.address":         ":8080",
+	"http.timeout":         5 * time.Second,
+	"http.idletimeout":     60 * time.Second,
+	"http.shutdowntimeout": 10 * time.Second,
 }
 
-func parseString(val string, defVal string) string {
-	if val == "" {
-		return defVal
-	}
-	return val
-}
+func Load(v *validator.Validate) (*Config, error) {
+	k := koanf.New(".")
 
-func parseDuration(val string, def time.Duration) (time.Duration, error) {
-	if val == "" {
-		return def, nil
+	k.Load(confmap.Provider(defaults, "."), nil)
+
+	// Env vars override defaults.
+	// ENV=production            → env
+	// HTTP_ADDRESS=:9090        → http.address
+	// HTTP_IDLETIMEOUT=30s      → http.idletimeout
+	// HTTP_SHUTDOWNTIMEOUT=15s  → http.shutdowntimeout
+	k.Load(env.Provider(envPrefix, ".", func(s string) string {
+		s = strings.TrimPrefix(s, envPrefix)
+		s = strings.ToLower(s)
+		return strings.ReplaceAll(s, "_", ".")
+	}), nil)
+
+	var cfg Config
+	if err := k.Unmarshal("", &cfg); err != nil {
+		return nil, fmt.Errorf("unmarshal config: %w", err)
 	}
-	dur, err := time.ParseDuration(val)
-	if err != nil {
-		return 0, fmt.Errorf("failed to parse duration from string: %w", err)
+
+	if err := v.Struct(cfg); err != nil {
+		return nil, fmt.Errorf("validate config: %w", err)
 	}
-	return dur, nil
+
+	return &cfg, nil
 }

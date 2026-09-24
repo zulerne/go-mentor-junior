@@ -1,5 +1,7 @@
 package handler
 
+//go:generate go run github.com/vektra/mockery/v3@v3.8.0
+
 import (
 	"context"
 	"log/slog"
@@ -13,16 +15,40 @@ import (
 )
 
 const (
-	menuItemIDKey = "menu_item_id"
-	orderIDKey    = "order_id"
+	menuItemIDKey  = "menu_item_id"
+	orderIDKey     = "order_id"
+	errInternalMsg = "internal server error"
 )
 
+// Customer describes customer-facing operations.
+//
+//mockery:generate: true
 type Customer interface {
 	GetCart(ctx context.Context, customerID uuid.UUID) (domain.Cart, error)
+	AddItemToCart(
+		ctx context.Context,
+		customerID uuid.UUID,
+		restaurantID uuid.UUID,
+		menuItemID uuid.UUID,
+		quantity int32,
+		instructions string,
+	) (domain.Cart, error)
+	RemoveItemFromCart(ctx context.Context, customerID uuid.UUID, menuItemID uuid.UUID) error
+	CreateOrder(ctx context.Context, customerID uuid.UUID, deliveryAddress string) (domain.Order, error)
+	GetOrder(ctx context.Context, customerID uuid.UUID, orderID uuid.UUID) (domain.Order, error)
+	GetAllOrders(ctx context.Context, customerID uuid.UUID) ([]domain.Order, error)
+	CancelOrder(ctx context.Context, customerID uuid.UUID, orderID uuid.UUID) (domain.Order, error)
 }
 
+// Restaurant describes restaurant-facing operations.
+//
+//mockery:generate: true
 type Restaurant interface {
 	GetOrders(ctx context.Context, restaurantID uuid.UUID) ([]domain.Order, error)
+	AcceptOrder(ctx context.Context, restaurantID uuid.UUID, orderID uuid.UUID) (domain.Order, error)
+	RejectOrder(ctx context.Context, restaurantID uuid.UUID, orderID uuid.UUID, reason string) (domain.Order, error)
+	PrepareOrder(ctx context.Context, restaurantID uuid.UUID, orderID uuid.UUID) (domain.Order, error)
+	ReadyOrder(ctx context.Context, restaurantID uuid.UUID, orderID uuid.UUID) (domain.Order, error)
 }
 
 // Handler holds all dependencies for HTTP handlers.

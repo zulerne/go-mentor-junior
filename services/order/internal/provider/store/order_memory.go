@@ -2,6 +2,7 @@ package store
 
 import (
 	"context"
+	"sync"
 	"time"
 
 	"github.com/google/uuid"
@@ -9,6 +10,7 @@ import (
 )
 
 type MemoryOrderStore struct {
+	mu   sync.RWMutex
 	data map[uuid.UUID]domain.Order
 }
 
@@ -16,11 +18,19 @@ func NewMemoryOrderStore() *MemoryOrderStore {
 	data := make(map[uuid.UUID]domain.Order)
 
 	date := time.Date(2026, time.September, 1, 12, 0, 0, 0, time.UTC)
+	// restId: fe70cb38-d10d-452c-8860-1af5936f7037
+	// id1: 58185771-1f9f-4d71-9609-bdacea1deb2e
+	// id2: 4c5344f5-33d7-4c05-bbbc-a0edc4178e7e
+	// userId: ef55f77a-7738-426f-93a4-f78f2baf7970
+	// orderID: 2f5efdc6-c936-4fdf-a681-1e21e73e6e71
 
-	data[uuid.MustParse("test")] = domain.Order{
-		ID:              uuid.MustParse("test"),
-		CustomerID:      uuid.MustParse(""),
-		RestaurantID:    uuid.MustParse("1"),
+	orderID := uuid.MustParse("2f5efdc6-c936-4fdf-a681-1e21e73e6e71")
+	customerID := uuid.MustParse("ef55f77a-7738-426f-93a4-f78f2baf7970")
+	restaurantID := uuid.MustParse("fe70cb38-d10d-452c-8860-1af5936f7037")
+	data[orderID] = domain.Order{
+		ID:              orderID,
+		CustomerID:      customerID,
+		RestaurantID:    restaurantID,
 		Status:          domain.Pending,
 		Items:           nil,
 		SubtotalMinor:   0,
@@ -37,17 +47,44 @@ func NewMemoryOrderStore() *MemoryOrderStore {
 }
 
 func (s *MemoryOrderStore) Find(_ context.Context, id uuid.UUID) (domain.Order, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
 	order, ok := s.data[id]
 	if !ok {
-		return domain.Order{}, nil
+		return domain.Order{}, domain.ErrOrderNotFound
 	}
 	return order, nil
 }
 
 func (s *MemoryOrderStore) FindByRestaurant(_ context.Context, restaurantID uuid.UUID) ([]domain.Order, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
 	var orders []domain.Order
 	for _, order := range s.data {
 		if order.RestaurantID == restaurantID {
+			orders = append(orders, order)
+		}
+	}
+	return orders, nil
+}
+
+func (s *MemoryOrderStore) Update(_ context.Context, order domain.Order) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	s.data[order.ID] = order
+	return nil
+}
+
+func (s *MemoryOrderStore) GetAllOrders(_ context.Context, customerID uuid.UUID) ([]domain.Order, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	var orders []domain.Order
+	for _, order := range s.data {
+		if order.CustomerID == customerID {
 			orders = append(orders, order)
 		}
 	}

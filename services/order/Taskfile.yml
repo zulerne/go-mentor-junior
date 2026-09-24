@@ -55,6 +55,12 @@ tasks:
     cmds:
       - go test ./...
 
+  coverage:
+    desc: Run the test suite and generate coverage report
+    cmds:
+      - go test -coverprofile=coverage.out ./...
+      - go tool cover -func=coverage.out
+
   test-race:
     desc: Run the test suite with the race detector
     cmds:

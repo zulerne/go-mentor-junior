@@ -1,10 +1,13 @@
 package handler
 
 import (
+	"errors"
 	"net/http"
 
+	"github.com/google/uuid"
 	"github.com/zulerne/go-mentor-junior/order/internal/api/common"
 	"github.com/zulerne/go-mentor-junior/order/internal/api/middleware"
+	"github.com/zulerne/go-mentor-junior/order/internal/domain"
 )
 
 func (h *Handler) removeItemFromCart(w http.ResponseWriter, r *http.Request) {
@@ -18,24 +21,27 @@ func (h *Handler) removeItemFromCart(w http.ResponseWriter, r *http.Request) {
 		"customer_id", customerID,
 	)
 
-	menuItemID := r.PathValue(menuItemIDKey)
-	if menuItemID == "" {
-		msg := "menu item id is required"
+	menuItemID, err := uuid.Parse(r.PathValue(menuItemIDKey))
+	if err != nil {
+		msg := common.MenuItemRequiredErrorCode
 		log.ErrorContext(r.Context(), msg)
-		common.RespondJSON(
-			log,
-			w,
-			http.StatusBadRequest,
-			common.NewBaseError(msg),
-		)
+		common.RespondJSON(log, w, http.StatusBadRequest, common.NewBaseError(msg))
 		return
 	}
-	log.DebugContext(r.Context(), "menu item id parsed", "menu_item_id", menuItemID)
+	log = log.With("order_id", menuItemID)
 
-	common.RespondJSON(
-		log,
-		w,
-		http.StatusNoContent,
-		nil,
-	)
+	log.InfoContext(r.Context(), "request received")
+
+	err = h.customer.RemoveItemFromCart(r.Context(), customerID, menuItemID)
+	if err != nil {
+		switch {
+		case errors.Is(err, domain.ErrCartNotFound):
+		default:
+			log.ErrorContext(r.Context(), errInternalMsg, "error", err)
+			common.RespondJSON(log, w, http.StatusInternalServerError, common.NewBaseError(errInternalMsg))
+			return
+		}
+	}
+
+	common.RespondJSON(log, w, http.StatusNoContent, nil)
 }

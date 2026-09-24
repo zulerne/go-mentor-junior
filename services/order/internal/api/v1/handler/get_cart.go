@@ -4,7 +4,6 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/google/uuid"
 	"github.com/zulerne/go-mentor-junior/order/internal/api/common"
 	"github.com/zulerne/go-mentor-junior/order/internal/api/middleware"
 	"github.com/zulerne/go-mentor-junior/order/internal/domain"
@@ -25,30 +24,32 @@ func (h *Handler) getCart(w http.ResponseWriter, r *http.Request) {
 
 	cart, err := h.customer.GetCart(
 		r.Context(),
-		uuid.MustParse(customerID),
+		customerID,
 	)
 	if err != nil {
-		if errors.Is(err, domain.ErrNotFound) {
+		switch {
+		case errors.Is(err, domain.ErrCartNotFound):
 			common.RespondJSON(
 				log,
 				w,
-				http.StatusNotFound,
-				common.NewError(common.CustomerNotFoundErrorCode, "customer not found", nil),
+				http.StatusOK,
+				CartResponse{
+					Items: []CartItem{},
+				},
 			)
-			return
+		default:
+			msg := "failed to get cart"
+			log.ErrorContext(r.Context(), msg, "error", err)
+			common.RespondJSON(
+				log,
+				w,
+				http.StatusInternalServerError,
+				common.NewBaseError(msg),
+			)
 		}
 
-		msg := "failed to get cart"
-		log.ErrorContext(r.Context(), msg, "error", err)
-		common.RespondJSON(
-			log,
-			w,
-			http.StatusInternalServerError,
-			common.NewBaseError(msg),
-		)
 		return
 	}
-
 	cartItems := make([]CartItem, 0, len(cart.Items))
 	for _, item := range cart.Items {
 		cartItems = append(cartItems, CartItem{
