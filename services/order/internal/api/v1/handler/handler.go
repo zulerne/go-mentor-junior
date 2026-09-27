@@ -6,6 +6,7 @@ import (
 	"context"
 	"log/slog"
 	"net/http"
+	"net/http/pprof"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
@@ -72,9 +73,16 @@ func New(cust Customer, rest Restaurant, validator *validator.Validate, log *slo
 }
 
 func (h *Handler) Routes() http.Handler {
+	log := h.log
 	mux := http.NewServeMux()
 
-	log := h.log
+	// pprof endpoints
+	mux.HandleFunc("GET /debug/pprof/", pprof.Index)
+	mux.HandleFunc("GET /debug/pprof/cmdline", pprof.Cmdline)
+	mux.HandleFunc("GET /debug/pprof/profile", pprof.Profile)
+	mux.HandleFunc("GET /debug/pprof/symbol", pprof.Symbol)
+	mux.HandleFunc("GET /debug/pprof/trace", pprof.Trace)
+
 	mux.HandleFunc("GET /livez", h.livez)
 	mux.HandleFunc("GET /readyz", h.readyz)
 
