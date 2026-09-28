@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
-	"time"
+	"strings"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/zulerne/go-mentor-junior/order/internal/api/common"
@@ -13,7 +13,7 @@ import (
 )
 
 type createOrderRequest struct {
-	DeliveryAddress string `json:"delivery_address" validate:"required"`
+	DeliveryAddress string `json:"delivery_address" validate:"required,max=500"`
 }
 
 func (h *Handler) createOrder(w http.ResponseWriter, r *http.Request) {
@@ -39,6 +39,8 @@ func (h *Handler) createOrder(w http.ResponseWriter, r *http.Request) {
 
 	log.InfoContext(r.Context(), "request received", "req", req)
 
+	req.DeliveryAddress = strings.TrimSpace(req.DeliveryAddress)
+
 	if err := h.validator.Struct(req); err != nil {
 		msg := common.ValidationErrorCode
 		log.ErrorContext(r.Context(), msg, "error", err)
@@ -52,11 +54,57 @@ func (h *Handler) createOrder(w http.ResponseWriter, r *http.Request) {
 		common.RespondJSON(log, w, http.StatusInternalServerError, common.NewBaseError("server error"))
 		return
 	}
-	date := time.Date(2026, time.September, 1, 12, 0, 0, 0, time.UTC).Format(time.RFC3339)
-	common.RespondJSON(log, w, http.StatusCreated, OrderResponse{
-		Status:    string(domain.Pending),
-		Items:     []OrderItem{},
-		CreatedAt: date,
-		UpdatedAt: date,
-	})
+
+	if req.DeliveryAddress == "" {
+		common.RespondJSON(
+			log,
+			w,
+			http.StatusBadRequest,
+			common.NewError(common.InvalidDeliveryAddressErrorCode, "delivery address is required", nil),
+		)
+		return
+	}
+
+	order, err := h.customer.CreateOrder(r.Context(), customerID, req.DeliveryAddress)
+	if err != nil {
+		switch {
+		case errors.Is(err, domain.ErrCartEmpty):
+			common.RespondJSON(log, w, http.StatusUnprocessableEntity, common.NewError(
+				common.EmptyCartErrorCode,
+				"cart empty",
+				nil))
+		case errors.Is(err, domain.ErrMenuItemNotAvailable):
+			common.RespondJSON(log, w, http.StatusUnprocessableEntity, common.NewError(
+				common.MenuItemUnavailableErrorCode,
+				"menu item not available",
+				nil))
+		case errors.Is(err, domain.ErrInvalidDeliveryAddress):
+			common.RespondJSON(log, w, http.StatusBadRequest, common.NewError(
+				common.InvalidDeliveryAddressErrorCode,
+				"invalid delivery address",
+				nil))
+		case errors.Is(err, domain.ErrNotFound):
+			common.RespondJSON(log, w, http.StatusNotFound, common.NewError(
+				common.RestaurantNotFoundErrorCode,
+				"restaurant not found",
+				nil))
+		case errors.Is(err, domain.ErrRestaurantNotAcceptingOrders):
+			common.RespondJSON(log, w, http.StatusBadRequest, common.NewError(
+				common.RestaurantNotAcceptingOrdersErrorCode,
+				"restaurant not accepting orders",
+				nil))
+		case errors.Is(err, domain.ErrMinOrderNotReached):
+			common.RespondJSON(log, w, http.StatusBadRequest, common.NewError(
+				common.MinimumOrderNotReachedErrorCode,
+				"min order amount not met",
+				nil))
+		default:
+			log.ErrorContext(r.Context(), errInternalMsg, "error", err)
+			common.RespondJSON(log, w, http.StatusInternalServerError, common.NewBaseError(errInternalMsg))
+		}
+
+		return
+	}
+
+	common.RespondJSON(log, w, http.StatusCreated, orderToDTO(order))
 }

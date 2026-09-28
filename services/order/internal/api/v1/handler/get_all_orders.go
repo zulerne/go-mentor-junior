@@ -18,17 +18,15 @@ func (h *Handler) getAllOrders(w http.ResponseWriter, r *http.Request) {
 		"customer_id", customerID,
 	)
 
-	// orders, err := h.customer.GetAllOrders(r.Context())
-	// if err != nil {
-	// 	msg := "failed to get all orders"
-	// 	log.Error(msg, "error", err)
-	// 	h.respond(w, http.StatusInternalServerError, response.NewBaseError(msg, err))
-	// 	return
-	// }
-	//
-	log.DebugContext(r.Context(), "getting all orders")
+	orders, err := h.customer.GetAllOrders(r.Context(), customerID)
+	if err != nil {
+		msg := "failed to get all orders"
+		log.ErrorContext(r.Context(), msg, "error", err)
+		common.RespondJSON(log, w, http.StatusInternalServerError, common.NewBaseError(msg))
+		return
+	}
 
 	common.RespondJSON(log, w, http.StatusOK, AllOrdersResponse{
-		Orders: []OrderResponse{},
+		Orders: ordersToDTOs(orders),
 	})
 }

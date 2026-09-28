@@ -438,6 +438,12 @@ linters:
       - common-false-positives
     # Excluding configuration per-path, per-linter, per-text and per-source.
     rules:
+      - source: '\(w http\.ResponseWriter, r \*http\.Request\)'
+        linters: [funlen]
+      - text: 'use "X-Customer-Id"'
+        linters: [canonicalheader]
+      - text: 'use "X-Restaurant-Id"'
+        linters: [canonicalheader]
       - source: "TODO"
         linters: [godot]
       - text: "should have a package comment"
@@ -460,3 +466,4 @@ linters:
           - gosec
           - noctx
           - wrapcheck
+          - gochecknoglobals

@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/google/uuid"
 	"github.com/zulerne/go-mentor-junior/order/internal/api/common"
 )
 
@@ -19,9 +20,9 @@ func RestaurantID(log *slog.Logger) Middleware {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			log.DebugContext(r.Context(), "Checking for X-Restaurant-ID header")
 
-			h := r.Header.Get(restaurantIDHeader)
+			restaurantID, err := uuid.Parse(r.Header.Get(restaurantIDHeader))
 
-			if h == "" {
+			if err != nil {
 				log.ErrorContext(r.Context(), "X-Restaurant-ID header is missing")
 				common.RespondJSON(
 					log,
@@ -32,17 +33,17 @@ func RestaurantID(log *slog.Logger) Middleware {
 				return
 			}
 
-			ctx := WithRestaurantID(r.Context(), h)
+			ctx := WithRestaurantID(r.Context(), restaurantID)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
 }
 
-func WithRestaurantID(ctx context.Context, id string) context.Context {
+func WithRestaurantID(ctx context.Context, id uuid.UUID) context.Context {
 	return context.WithValue(ctx, restaurantIDKey, id)
 }
 
-func RestaurantIDFromContext(ctx context.Context) (string, bool) {
-	id, ok := ctx.Value(restaurantIDKey).(string)
+func RestaurantIDFromContext(ctx context.Context) (uuid.UUID, bool) {
+	id, ok := ctx.Value(restaurantIDKey).(uuid.UUID)
 	return id, ok
 }

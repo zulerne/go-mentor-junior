@@ -1,9 +1,10 @@
 package handler
 
 import (
+	"errors"
 	"net/http"
-	"time"
 
+	"github.com/google/uuid"
 	"github.com/zulerne/go-mentor-junior/order/internal/api/common"
 	"github.com/zulerne/go-mentor-junior/order/internal/api/middleware"
 	"github.com/zulerne/go-mentor-junior/order/internal/domain"
@@ -20,29 +21,46 @@ func (h *Handler) cancelOrder(w http.ResponseWriter, r *http.Request) {
 		"customer_id", customerID,
 	)
 
-	orderID := r.PathValue(orderIDKey)
-	if orderID == "" {
+	orderID, err := uuid.Parse(r.PathValue(orderIDKey))
+	if err != nil {
 		msg := common.OrderIDRequiredErrorCode
 		log.ErrorContext(r.Context(), msg)
 		common.RespondJSON(log, w, http.StatusBadRequest, common.NewBaseError(msg))
 		return
 	}
-	log.DebugContext(r.Context(), "order id parsed", "order_id", orderID)
+	log = log.With("order_id", orderID)
 
-	// orders, err := h.customer.CancelOrder(r.Context(), orderID)
-	// if err != nil {
-	// 	msg := "failed to cancel order"
-	// 	log.Error(msg, "error", err)
-	// 	h.respond(w, http.StatusInternalServerError, response.NewBaseError(msg, err))
-	// 	return
-	// }
-	//
+	err = h.customer.CancelOrder(r.Context(), orderID)
+	if err != nil {
+		switch {
+		case errors.Is(err, domain.ErrNotFound):
+			common.RespondJSON(
+				log,
+				w,
+				http.StatusNotFound,
+				common.NewError(common.OrderNotFoundErrorCode, "order not found", nil),
+			)
+		case errors.Is(err, domain.ErrOrderAccessDenied):
+			common.RespondJSON(
+				log,
+				w,
+				http.StatusForbidden,
+				common.NewError(common.OrderAccessDeniedErrorCode, "order access denied", nil),
+			)
+		case errors.Is(err, domain.ErrInvalidOrderTransition):
+			common.RespondJSON(
+				log,
+				w,
+				http.StatusConflict,
+				common.NewError(common.InvalidOrderTransitionErrorCode, "invalid order transition", nil),
+			)
+		default:
+			log.ErrorContext(r.Context(), errInternalMsg, "error", err)
+			common.RespondJSON(log, w, http.StatusInternalServerError, common.NewBaseError(errInternalMsg))
+		}
 
-	date := time.Date(2026, time.September, 1, 12, 0, 0, 0, time.UTC).Format(time.RFC3339)
-	common.RespondJSON(log, w, http.StatusOK, OrderResponse{
-		Status:    string(domain.Cancelled),
-		Items:     []OrderItem{},
-		CreatedAt: date,
-		UpdatedAt: date,
-	})
+		return
+	}
+
+	common.RespondJSON(log, w, http.StatusNoContent, nil)
 }
