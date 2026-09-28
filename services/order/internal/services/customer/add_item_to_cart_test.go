@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 	"github.com/zulerne/go-mentor-junior/order/internal/domain"
 )
 
@@ -19,7 +20,7 @@ func TestAddItemToCart_NewCart(t *testing.T) {
 
 	service := newCustomer(oStore, cStore, rest)
 
-	cStore.EXPECT().Find(mock.Anything, testCustomerID).Return(domain.Cart{}, domain.ErrCartNotFound)
+	cStore.EXPECT().Find(mock.Anything, testCustomerID).Return(domain.Cart{}, domain.ErrNotFound)
 	rest.EXPECT().FindItem(mock.Anything, testRestaurantID, testMenuItemID).Return(domain.MenuItem{
 		ID:          testMenuItemID,
 		Name:        "Test Item",
@@ -30,9 +31,13 @@ func TestAddItemToCart_NewCart(t *testing.T) {
 	}, nil)
 	cStore.EXPECT().Update(mock.Anything, testCustomerID, mock.Anything).Return(nil)
 
-	cart, err := service.AddItemToCart(context.Background(), testCustomerID, testRestaurantID, testMenuItemID, 1, "")
+	cart, err := service.AddItemToCart(context.Background(), testCustomerID, testRestaurantID, domain.CartItem{
+		MenuItemID:   testMenuItemID,
+		Quantity:     1,
+		Instructions: "",
+	})
 
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.NotNil(t, cart)
 	assert.Equal(t, "Test Item", cart.Items[0].Name)
 	assert.Equal(t, int64(100), cart.Items[0].UnitPriceMinor)
@@ -63,9 +68,13 @@ func TestAddItemToCart_ExistingCartSameRestaurant(t *testing.T) {
 	}, nil)
 	cStore.EXPECT().Update(mock.Anything, testCustomerID, mock.Anything).Return(nil)
 
-	cart, err := service.AddItemToCart(context.Background(), testCustomerID, testRestaurantID, testMenuItemID, 1, "")
+	cart, err := service.AddItemToCart(context.Background(), testCustomerID, testRestaurantID, domain.CartItem{
+		MenuItemID:   testMenuItemID,
+		Quantity:     1,
+		Instructions: "",
+	})
 
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.NotNil(t, cart)
 	assert.Equal(t, "Test Item", cart.Items[0].Name)
 	assert.Equal(t, int64(100), cart.Items[0].UnitPriceMinor)
@@ -87,10 +96,14 @@ func TestAddItemToCart_ExistingCartDifferentRestaurant(t *testing.T) {
 		Currency:      "USD",
 	}, nil)
 
-	_, err := service.AddItemToCart(context.Background(), testCustomerID, uuid.New(), testMenuItemID, 1, "")
+	_, err := service.AddItemToCart(context.Background(), testCustomerID, uuid.New(), domain.CartItem{
+		MenuItemID:   testMenuItemID,
+		Quantity:     1,
+		Instructions: "",
+	})
 
-	assert.Error(t, err)
-	assert.Equal(t, domain.ErrOrderAccessDenied, err)
+	require.Error(t, err)
+	assert.Equal(t, domain.ErrNotFound, err)
 }
 
 func TestAddItemToCart_UpdatesQuantityIfItemExists(t *testing.T) {
@@ -127,12 +140,16 @@ func TestAddItemToCart_UpdatesQuantityIfItemExists(t *testing.T) {
 	}, nil)
 	cStore.EXPECT().Update(mock.Anything, testCustomerID, mock.Anything).Return(nil)
 
-	cart, err := service.AddItemToCart(context.Background(), testCustomerID, testRestaurantID, testMenuItemID, 1, "")
+	cart, err := service.AddItemToCart(context.Background(), testCustomerID, testRestaurantID, domain.CartItem{
+		MenuItemID:   testMenuItemID,
+		Quantity:     1,
+		Instructions: "",
+	})
 
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, "Test Item", cart.Items[0].Name)
-	assert.Equal(t, 1, len(cart.Items))
-	assert.Equal(t, int32(1), cart.Items[0].Quantity)
+	assert.Len(t, cart.Items, 1)
+	assert.Equal(t, int32(11), cart.Items[0].Quantity)
 }
 
 func TestAddItemToCart_CartUnitLimit(t *testing.T) {
@@ -150,11 +167,14 @@ func TestAddItemToCart_CartUnitLimit(t *testing.T) {
 		SubtotalMinor: 0,
 		Currency:      "USD",
 	}, nil)
-	// cStore.EXPECT().Update(mock.Anything, testCustomerID, mock.Anything).Return(nil)
 
-	_, err := service.AddItemToCart(context.Background(), testCustomerID, testRestaurantID, testMenuItemID, 51, "")
+	_, err := service.AddItemToCart(context.Background(), testCustomerID, testRestaurantID, domain.CartItem{
+		MenuItemID:   testMenuItemID,
+		Quantity:     51,
+		Instructions: "",
+	})
 
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Equal(t, domain.ErrCartLimit, err)
 }
 
@@ -173,19 +193,14 @@ func TestAddItemToCart_CartLineLimit(t *testing.T) {
 		SubtotalMinor: 1500,
 		Currency:      "USD",
 	}, nil)
-	// rest.EXPECT().FindItem(mock.Anything, testRestaurantID, testMenuItemID).Return(domain.MenuItem{
-	// 	ID:          testMenuItemID,
-	// 	Name:        "Test Item",
-	// 	Description: "Test Description",
-	// 	PriceMinor:  100,
-	// 	Currency:    "USD",
-	// 	Available:   true,
-	// }, nil)
-	// cStore.EXPECT().Update(mock.Anything, testCustomerID, mock.Anything).Return(nil)
 
-	_, err := service.AddItemToCart(context.Background(), testCustomerID, testRestaurantID, testMenuItemID, 6, "")
+	_, err := service.AddItemToCart(context.Background(), testCustomerID, testRestaurantID, domain.CartItem{
+		MenuItemID:   testMenuItemID,
+		Quantity:     6,
+		Instructions: "",
+	})
 
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Equal(t, domain.ErrCartLimit, err)
 }
 
@@ -212,11 +227,14 @@ func TestAddItemToCart_ItemNotAvailable(t *testing.T) {
 		Currency:    "USD",
 		Available:   false,
 	}, nil)
-	// cStore.EXPECT().Update(mock.Anything, testCustomerID, mock.Anything).Return(nil)
 
-	_, err := service.AddItemToCart(context.Background(), testCustomerID, testRestaurantID, testMenuItemID, 6, "")
+	_, err := service.AddItemToCart(context.Background(), testCustomerID, testRestaurantID, domain.CartItem{
+		MenuItemID:   testMenuItemID,
+		Quantity:     6,
+		Instructions: "",
+	})
 
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Equal(t, domain.ErrMenuItemNotAvailable, err)
 }
 
@@ -245,9 +263,13 @@ func TestAddItemToCart_SubtotalCalculation(t *testing.T) {
 	}, nil)
 	cStore.EXPECT().Update(mock.Anything, testCustomerID, mock.Anything).Return(nil)
 
-	cart, err := service.AddItemToCart(context.Background(), testCustomerID, testRestaurantID, testMenuItemID, 6, "")
+	cart, err := service.AddItemToCart(context.Background(), testCustomerID, testRestaurantID, domain.CartItem{
+		MenuItemID:   testMenuItemID,
+		Quantity:     6,
+		Instructions: "",
+	})
 
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, int64(1500+6*100), cart.SubtotalMinor)
-	assert.Equal(t, 6, len(cart.Items))
+	assert.Len(t, cart.Items, 6)
 }

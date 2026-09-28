@@ -5,6 +5,7 @@ package customer
 import (
 	"context"
 	"log/slog"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/zulerne/go-mentor-junior/order/internal/domain"
@@ -15,7 +16,7 @@ import (
 //mockery:generate: true
 type OrderStore interface {
 	Find(ctx context.Context, id uuid.UUID) (domain.Order, error)
-	Update(ctx context.Context, order domain.Order) error
+	Update(ctx context.Context, order domain.Order) (domain.Order, error)
 	GetAllOrders(ctx context.Context, customerID uuid.UUID) ([]domain.Order, error)
 }
 
@@ -40,16 +41,38 @@ type Service struct {
 	cartStore          CartStore
 	restaurantProvider RestaurantProvider
 	log                *slog.Logger
+	now                func() time.Time
+	newID              func() uuid.UUID
 }
 
-func New(orderStore OrderStore, cartStore CartStore, restaurantProvider RestaurantProvider, log *slog.Logger) *Service {
+type Option func(*Service)
+
+func WithNow(now func() time.Time) Option {
+	return func(s *Service) { s.now = now }
+}
+
+func WithNewID(newID func() uuid.UUID) Option {
+	return func(s *Service) { s.newID = newID }
+}
+
+func New(
+	orderStore OrderStore,
+	cartStore CartStore,
+	restaurantProvider RestaurantProvider,
+	log *slog.Logger,
+	opts ...Option,
+) *Service {
 	log = log.With("component", "customer")
-	c := &Service{
+	s := &Service{
 		orderStore:         orderStore,
 		cartStore:          cartStore,
 		restaurantProvider: restaurantProvider,
 		log:                log,
+		now:                func() time.Time { return time.Now().UTC() },
+		newID:              uuid.New,
 	}
-
-	return c
+	for _, opt := range opts {
+		opt(s)
+	}
+	return s
 }

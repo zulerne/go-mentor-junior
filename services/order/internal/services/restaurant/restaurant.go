@@ -5,7 +5,7 @@ package restaurant
 import (
 	"context"
 	"log/slog"
-	"sync"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/zulerne/go-mentor-junior/order/internal/domain"
@@ -17,7 +17,7 @@ import (
 type OrderStore interface {
 	Find(ctx context.Context, id uuid.UUID) (domain.Order, error)
 	FindByRestaurant(ctx context.Context, restaurantID uuid.UUID) ([]domain.Order, error)
-	Update(ctx context.Context, order domain.Order) error
+	Update(ctx context.Context, order domain.Order) (domain.Order, error)
 }
 
 // DeliveryProvider manages delivery lifecycle for orders.
@@ -32,15 +32,25 @@ type Service struct {
 	deliveryProvider DeliveryProvider
 	store            OrderStore
 	log              *slog.Logger
-	mu               sync.Mutex
+	now              func() time.Time
 }
 
-func New(store OrderStore, deliveryProvider DeliveryProvider, log *slog.Logger) *Service {
+type Option func(*Service)
+
+func WithNow(now func() time.Time) Option {
+	return func(s *Service) { s.now = now }
+}
+
+func New(store OrderStore, deliveryProvider DeliveryProvider, log *slog.Logger, opts ...Option) *Service {
 	log = log.With("component", "restaurant")
-	r := &Service{
+	s := &Service{
 		store:            store,
 		deliveryProvider: deliveryProvider,
 		log:              log,
+		now:              func() time.Time { return time.Now().UTC() },
 	}
-	return r
+	for _, opt := range opts {
+		opt(s)
+	}
+	return s
 }

@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/zulerne/go-mentor-junior/order/internal/domain"
 	"github.com/zulerne/go-mentor-junior/order/internal/provider/store"
 )
@@ -15,8 +16,8 @@ func TestMemoryOrderStore_Find_NotFound(t *testing.T) {
 	t.Parallel()
 	s := store.NewMemoryOrderStore()
 	_, err := s.Find(context.Background(), uuid.New())
-	assert.Error(t, err)
-	assert.Equal(t, domain.ErrOrderNotFound, err)
+	require.Error(t, err)
+	assert.Equal(t, domain.ErrNotFound, err)
 }
 
 func TestMemoryOrderStore_UpdateAndFind(t *testing.T) {
@@ -27,11 +28,12 @@ func TestMemoryOrderStore_UpdateAndFind(t *testing.T) {
 		CustomerID: uuid.New(),
 		Status:     domain.Pending,
 	}
-	err := s.Update(context.Background(), order)
-	assert.NoError(t, err)
+	updated, err := s.Update(context.Background(), order)
+	require.NoError(t, err)
+	assert.False(t, updated.UpdatedAt.IsZero(), "UpdatedAt should be set by store")
 	found, err := s.Find(context.Background(), order.ID)
-	assert.NoError(t, err)
-	assert.Equal(t, order, found)
+	require.NoError(t, err)
+	assert.Equal(t, updated, found)
 }
 
 func TestMemoryOrderStore_FindByRestaurant(t *testing.T) {
@@ -43,11 +45,11 @@ func TestMemoryOrderStore_FindByRestaurant(t *testing.T) {
 		RestaurantID: uuid.New(),
 		Status:       domain.Pending,
 	}
-	err := s.Update(context.Background(), order)
-	assert.NoError(t, err)
+	updated, err := s.Update(context.Background(), order)
+	require.NoError(t, err)
 	found, err := s.FindByRestaurant(context.Background(), order.RestaurantID)
-	assert.NoError(t, err)
-	assert.Equal(t, []domain.Order{order}, found)
+	require.NoError(t, err)
+	assert.Equal(t, []domain.Order{updated}, found)
 }
 
 func TestMemoryOrderStore_GetAllOrders(t *testing.T) {
@@ -59,11 +61,11 @@ func TestMemoryOrderStore_GetAllOrders(t *testing.T) {
 		RestaurantID: uuid.New(),
 		Status:       domain.Pending,
 	}
-	err := s.Update(context.Background(), order)
-	assert.NoError(t, err)
+	updated, err := s.Update(context.Background(), order)
+	require.NoError(t, err)
 	found, err := s.GetAllOrders(context.Background(), order.CustomerID)
-	assert.NoError(t, err)
-	assert.Equal(t, []domain.Order{order}, found)
+	require.NoError(t, err)
+	assert.Equal(t, []domain.Order{updated}, found)
 }
 
 func TestMemoryOrderStore_GetAllOrders_Empty(t *testing.T) {
@@ -71,7 +73,7 @@ func TestMemoryOrderStore_GetAllOrders_Empty(t *testing.T) {
 	s := store.NewMemoryOrderStore()
 
 	found, err := s.GetAllOrders(context.Background(), uuid.New())
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	var expected []domain.Order
 	assert.Equal(t, expected, found)
 }
@@ -82,7 +84,7 @@ func TestMemoryOrderStore_ConcurrentAccess(t *testing.T) {
 	var wg sync.WaitGroup
 	s := store.NewMemoryOrderStore()
 
-	for i := 0; i < 100; i++ {
+	for range 100 {
 		wg.Go(func() {
 			order := domain.Order{
 				ID:           uuid.New(),
@@ -90,8 +92,8 @@ func TestMemoryOrderStore_ConcurrentAccess(t *testing.T) {
 				RestaurantID: uuid.New(),
 				Status:       domain.Pending,
 			}
-			err := s.Update(context.Background(), order)
-			assert.NoError(t, err)
+			_, err := s.Update(context.Background(), order)
+			require.NoError(t, err)
 		})
 	}
 

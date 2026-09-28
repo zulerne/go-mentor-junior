@@ -6,8 +6,11 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"time"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/zulerne/go-mentor-junior/order/internal/api/v1/handler"
 	"github.com/zulerne/go-mentor-junior/order/internal/domain"
 )
 
@@ -17,11 +20,11 @@ func TestGetOrder_MissingCustomerID(t *testing.T) {
 
 	cust := NewMockCustomer(t)
 	rest := NewMockRestaurant(t)
-	handler := newHandler(cust, rest)
+	h := newHandler(cust, rest)
 
 	req := httptest.NewRequestWithContext(context.Background(), "GET", "/orders/"+testOrderID.String(), nil)
 
-	handler.Routes().ServeHTTP(rec, req)
+	h.Routes().ServeHTTP(rec, req)
 
 	assert.Equal(t, http.StatusBadRequest, rec.Code)
 }
@@ -32,50 +35,46 @@ func TestGetOrder_InvalidOrderID(t *testing.T) {
 
 	cust := NewMockCustomer(t)
 	rest := NewMockRestaurant(t)
-	handler := newHandler(cust, rest)
+	h := newHandler(cust, rest)
 
 	req := httptest.NewRequestWithContext(context.Background(), "GET", "/orders/"+"invalid", nil)
 	req.Header.Set(customerIDHeader, testCustomerID.String())
 
-	handler.Routes().ServeHTTP(rec, req)
+	h.Routes().ServeHTTP(rec, req)
 
 	assert.Equal(t, http.StatusBadRequest, rec.Code)
 }
 
-func TestGetOrder_NotFound(t *testing.T) {
+func TestGetOrder_ServiceErrors(t *testing.T) {
 	t.Parallel()
-	rec := httptest.NewRecorder()
 
-	cust := NewMockCustomer(t)
-	rest := NewMockRestaurant(t)
-	handler := newHandler(cust, rest)
+	tests := []struct {
+		name       string
+		serviceErr error
+		wantStatus int
+	}{
+		{"not found", domain.ErrNotFound, http.StatusNotFound},
+		{"access denied", domain.ErrOrderAccessDenied, http.StatusForbidden},
+	}
 
-	req := httptest.NewRequestWithContext(context.Background(), "GET", "/orders/"+testOrderID.String(), nil)
-	req.Header.Set(customerIDHeader, testCustomerID.String())
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 
-	cust.EXPECT().GetOrder(mock.Anything, testCustomerID, testOrderID).Return(domain.Order{}, domain.ErrOrderNotFound)
+			rec := httptest.NewRecorder()
+			cust := NewMockCustomer(t)
+			h := newHandler(cust, NewMockRestaurant(t))
 
-	handler.Routes().ServeHTTP(rec, req)
+			req := httptest.NewRequestWithContext(context.Background(), "GET", "/orders/"+testOrderID.String(), nil)
+			req.Header.Set(customerIDHeader, testCustomerID.String())
 
-	assert.Equal(t, http.StatusNotFound, rec.Code)
-}
+			cust.EXPECT().GetOrder(mock.Anything, testOrderID).Return(domain.Order{}, tc.serviceErr)
 
-func TestGetOrder_AccessDenied(t *testing.T) {
-	t.Parallel()
-	rec := httptest.NewRecorder()
+			h.Routes().ServeHTTP(rec, req)
 
-	cust := NewMockCustomer(t)
-	rest := NewMockRestaurant(t)
-	handler := newHandler(cust, rest)
-
-	req := httptest.NewRequestWithContext(context.Background(), "GET", "/orders/"+testOrderID.String(), nil)
-	req.Header.Set(customerIDHeader, testCustomerID.String())
-
-	cust.EXPECT().GetOrder(mock.Anything, testCustomerID, testOrderID).Return(domain.Order{}, domain.ErrOrderAccessDenied)
-
-	handler.Routes().ServeHTTP(rec, req)
-
-	assert.Equal(t, http.StatusForbidden, rec.Code)
+			assert.Equal(t, tc.wantStatus, rec.Code)
+		})
+	}
 }
 
 func TestGetOrder_Success(t *testing.T) {
@@ -84,12 +83,12 @@ func TestGetOrder_Success(t *testing.T) {
 
 	cust := NewMockCustomer(t)
 	rest := NewMockRestaurant(t)
-	handler := newHandler(cust, rest)
+	h := newHandler(cust, rest)
 
 	req := httptest.NewRequestWithContext(context.Background(), "GET", "/orders/"+testOrderID.String(), nil)
 	req.Header.Set(customerIDHeader, testCustomerID.String())
 
-	cust.EXPECT().GetOrder(mock.Anything, testCustomerID, testOrderID).Return(domain.Order{
+	cust.EXPECT().GetOrder(mock.Anything, testOrderID).Return(domain.Order{
 		ID:           testOrderID,
 		CustomerID:   testCustomerID,
 		RestaurantID: testRestaurantID,
@@ -107,18 +106,27 @@ func TestGetOrder_Success(t *testing.T) {
 		Currency:      "USD",
 	}, nil)
 
-	handler.Routes().ServeHTTP(rec, req)
+	h.Routes().ServeHTTP(rec, req)
 
 	assert.Equal(t, http.StatusOK, rec.Code)
-	resp := decodeOrder(t, rec)
-	assert.Equal(t, testOrderID.String(), resp.ID)
-	assert.Equal(t, testCustomerID.String(), resp.CustomerID)
-	assert.Equal(t, testRestaurantID.String(), resp.RestaurantID)
-	assert.Equal(t, string(domain.Pending), resp.Status)
-	assert.Len(t, resp.Items, 1)
-	assert.Equal(t, testMenuItemID.String(), resp.Items[0].MenuItemID)
-	assert.Equal(t, "Test Item", resp.Items[0].Name)
-	assert.EqualValues(t, 1, resp.Items[0].Quantity)
-	assert.EqualValues(t, 100, resp.Items[0].UnitPriceMinor)
-	assert.Equal(t, "", resp.Items[0].Instructions)
+	assert.Equal(t, handler.OrderResponse{
+		ID:           testOrderID,
+		CustomerID:   testCustomerID,
+		RestaurantID: testRestaurantID,
+		Status:       string(domain.Pending),
+		Items: []handler.OrderItem{{
+			MenuItemID:     testMenuItemID,
+			Name:           "Test Item",
+			UnitPriceMinor: 100,
+			Quantity:       1,
+			Instructions:   "",
+		}},
+		SubtotalMinor:   100,
+		Currency:        "USD",
+		DeliveryAddress: "",
+		RejectionReason: "",
+		DeliveryStatus:  "",
+		CreatedAt:       time.Time{}.UTC(),
+		UpdatedAt:       time.Time{}.UTC(),
+	}, decodeOrder(t, rec))
 }

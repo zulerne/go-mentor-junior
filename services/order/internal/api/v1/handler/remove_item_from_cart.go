@@ -35,7 +35,7 @@ func (h *Handler) removeItemFromCart(w http.ResponseWriter, r *http.Request) {
 	err = h.customer.RemoveItemFromCart(r.Context(), customerID, menuItemID)
 	if err != nil {
 		switch {
-		case errors.Is(err, domain.ErrCartNotFound):
+		case errors.Is(err, domain.ErrNotFound):
 		default:
 			log.ErrorContext(r.Context(), errInternalMsg, "error", err)
 			common.RespondJSON(log, w, http.StatusInternalServerError, common.NewBaseError(errInternalMsg))

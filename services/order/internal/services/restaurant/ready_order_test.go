@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	mock "github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 	"github.com/zulerne/go-mentor-junior/order/internal/domain"
 )
 
@@ -17,11 +18,11 @@ func TestReadyOrder_NotFound(t *testing.T) {
 	delivery := NewMockDeliveryProvider(t)
 	service := newRestaurant(oStore, delivery)
 
-	oStore.EXPECT().Find(mock.Anything, testOrderID).Return(domain.Order{}, domain.ErrOrderNotFound)
+	oStore.EXPECT().Find(mock.Anything, testOrderID).Return(domain.Order{}, domain.ErrNotFound)
 
 	_, err := service.ReadyOrder(context.Background(), testRestaurantID, testOrderID)
 
-	assert.ErrorIs(t, err, domain.ErrOrderNotFound)
+	assert.ErrorIs(t, err, domain.ErrNotFound)
 }
 
 func TestReadyOrder_AccessDenied(t *testing.T) {
@@ -57,7 +58,7 @@ func TestReadyOrder_AlreadyReadyForPickup(t *testing.T) {
 
 	order, err := service.ReadyOrder(context.Background(), testRestaurantID, testOrderID)
 
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, domain.ReadyForPickup, order.Status)
 }
 
@@ -112,12 +113,24 @@ func TestReadyOrder_Success(t *testing.T) {
 		Status:       domain.Preparing,
 	}, nil)
 	delivery.EXPECT().Start(mock.Anything, testOrderID).Return(nil)
-	oStore.EXPECT().Update(mock.Anything, mock.Anything).Return(nil)
+	oStore.EXPECT().Update(mock.Anything, mock.Anything).Return(domain.Order{
+		ID:             testOrderID,
+		RestaurantID:   testRestaurantID,
+		CustomerID:     testCustomerID,
+		Status:         domain.ReadyForPickup,
+		DeliveryStatus: domain.InDelivery,
+		UpdatedAt:      fixedNow,
+	}, nil)
 
 	order, err := service.ReadyOrder(context.Background(), testRestaurantID, testOrderID)
 
-	assert.NoError(t, err)
-	assert.Equal(t, domain.ReadyForPickup, order.Status)
-	assert.Equal(t, domain.InDelivery, order.DeliveryStatus)
-	assert.Equal(t, testRestaurantID, order.RestaurantID)
+	require.NoError(t, err)
+	assert.Equal(t, domain.Order{
+		ID:             testOrderID,
+		RestaurantID:   testRestaurantID,
+		CustomerID:     testCustomerID,
+		Status:         domain.ReadyForPickup,
+		DeliveryStatus: domain.InDelivery,
+		UpdatedAt:      fixedNow,
+	}, order)
 }

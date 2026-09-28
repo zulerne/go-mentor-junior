@@ -8,6 +8,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/zulerne/go-mentor-junior/order/internal/api/v1/handler"
 	"github.com/zulerne/go-mentor-junior/order/internal/domain"
 )
 
@@ -17,10 +18,10 @@ func TestGetCart_MissingCustomerID(t *testing.T) {
 
 	cust := NewMockCustomer(t)
 	rest := NewMockRestaurant(t)
-	handler := newHandler(cust, rest)
+	h := newHandler(cust, rest)
 
 	req := httptest.NewRequestWithContext(context.Background(), "GET", "/cart", nil)
-	handler.Routes().ServeHTTP(rec, req)
+	h.Routes().ServeHTTP(rec, req)
 
 	assert.Equal(t, http.StatusBadRequest, rec.Code)
 }
@@ -31,14 +32,14 @@ func TestGetCart_EmptyCart(t *testing.T) {
 
 	cust := NewMockCustomer(t)
 	rest := NewMockRestaurant(t)
-	handler := newHandler(cust, rest)
+	h := newHandler(cust, rest)
 
 	req := httptest.NewRequestWithContext(context.Background(), "GET", "/cart", nil)
 	req.Header.Set(customerIDHeader, testCustomerID.String())
 
-	cust.EXPECT().GetCart(mock.Anything, testCustomerID).Return(domain.Cart{}, domain.ErrCartNotFound)
+	cust.EXPECT().GetCart(mock.Anything, testCustomerID).Return(domain.Cart{}, domain.ErrNotFound)
 
-	handler.Routes().ServeHTTP(rec, req)
+	h.Routes().ServeHTTP(rec, req)
 
 	assert.Equal(t, http.StatusOK, rec.Code)
 	resp := decodeCart(t, rec)
@@ -52,7 +53,7 @@ func TestGetCart_Success(t *testing.T) {
 
 	cust := NewMockCustomer(t)
 	rest := NewMockRestaurant(t)
-	handler := newHandler(cust, rest)
+	h := newHandler(cust, rest)
 
 	req := httptest.NewRequestWithContext(context.Background(), "GET", "/cart", nil)
 	req.Header.Set(customerIDHeader, testCustomerID.String())
@@ -64,12 +65,13 @@ func TestGetCart_Success(t *testing.T) {
 		Currency:      "USD",
 	}, nil)
 
-	handler.Routes().ServeHTTP(rec, req)
+	h.Routes().ServeHTTP(rec, req)
 
 	assert.Equal(t, http.StatusOK, rec.Code)
-	resp := decodeCart(t, rec)
-	assert.Equal(t, testRestaurantID.String(), resp.RestaurantID)
-	assert.Equal(t, "USD", resp.Currency)
-	assert.EqualValues(t, 150, resp.SubtotalMinor)
-	assert.Empty(t, resp.Items)
+	assert.Equal(t, handler.CartResponse{
+		RestaurantID:  new(testRestaurantID),
+		Items:         []handler.CartItem{},
+		SubtotalMinor: 150,
+		Currency:      "USD",
+	}, decodeCart(t, rec))
 }

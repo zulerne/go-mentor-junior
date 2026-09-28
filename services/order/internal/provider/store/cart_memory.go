@@ -53,7 +53,7 @@ func (s *MemoryCartStore) Find(_ context.Context, customerID uuid.UUID) (domain.
 
 	cart, ok := s.data[customerID]
 	if !ok {
-		return domain.Cart{}, domain.ErrCartNotFound
+		return domain.Cart{}, domain.ErrNotFound
 	}
 
 	cart.Items = slices.Clone(cart.Items)

@@ -4,9 +4,9 @@ import (
 	"context"
 	"testing"
 
-	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 	"github.com/zulerne/go-mentor-junior/order/internal/domain"
 )
 
@@ -19,35 +19,12 @@ func TestGetOrder_NotFound(t *testing.T) {
 
 	service := newCustomer(oStore, cStore, rest)
 
-	oStore.EXPECT().Find(mock.Anything, testOrderID).Return(domain.Order{}, domain.ErrOrderNotFound)
+	oStore.EXPECT().Find(mock.Anything, testOrderID).Return(domain.Order{}, domain.ErrNotFound)
 
-	_, err := service.GetOrder(context.Background(), testCustomerID, testOrderID)
+	_, err := service.GetOrder(context.Background(), testOrderID)
 
-	assert.Error(t, err)
-	assert.Equal(t, domain.ErrOrderNotFound, err)
-}
-
-func TestGetOrder_AccessDenied(t *testing.T) {
-	t.Parallel()
-
-	oStore := NewMockOrderStore(t)
-	cStore := NewMockCartStore(t)
-	rest := NewMockRestaurantProvider(t)
-
-	service := newCustomer(oStore, cStore, rest)
-
-	oStore.EXPECT().Find(mock.Anything, testOrderID).Return(domain.Order{
-		ID:           testOrderID,
-		CustomerID:   uuid.New(),
-		RestaurantID: testRestaurantID,
-		Status:       domain.Pending,
-		Currency:     "USD",
-	}, nil)
-
-	_, err := service.GetOrder(context.Background(), testCustomerID, testOrderID)
-
-	assert.Error(t, err)
-	assert.Equal(t, domain.ErrOrderAccessDenied, err)
+	require.Error(t, err)
+	assert.Equal(t, domain.ErrNotFound, err)
 }
 
 func TestGetOrder_Success(t *testing.T) {
@@ -67,11 +44,14 @@ func TestGetOrder_Success(t *testing.T) {
 		Currency:     "USD",
 	}, nil)
 
-	order, err := service.GetOrder(context.Background(), testCustomerID, testOrderID)
+	order, err := service.GetOrder(context.Background(), testOrderID)
 
-	assert.NoError(t, err)
-	assert.Equal(t, testOrderID, order.ID)
-	assert.Equal(t, domain.Pending, order.Status)
-	assert.Equal(t, testCustomerID, order.CustomerID)
-	assert.Equal(t, testRestaurantID, order.RestaurantID)
+	require.NoError(t, err)
+	assert.Equal(t, domain.Order{
+		ID:           testOrderID,
+		CustomerID:   testCustomerID,
+		RestaurantID: testRestaurantID,
+		Status:       domain.Pending,
+		Currency:     "USD",
+	}, order)
 }

@@ -42,58 +42,41 @@ func TestCancelOrder_InvalidOrderID(t *testing.T) {
 	assert.Equal(t, http.StatusBadRequest, rec.Code)
 }
 
-func TestCancelOrder_NotFound(t *testing.T) {
+func TestCancelOrder_ServiceErrors(t *testing.T) {
 	t.Parallel()
-	rec := httptest.NewRecorder()
 
-	cust := NewMockCustomer(t)
-	rest := NewMockRestaurant(t)
-	handler := newHandler(cust, rest)
+	tests := []struct {
+		name       string
+		serviceErr error
+		wantStatus int
+	}{
+		{"not found", domain.ErrNotFound, http.StatusNotFound},
+		{"invalid transition", domain.ErrInvalidOrderTransition, http.StatusConflict},
+	}
 
-	req := httptest.NewRequestWithContext(context.Background(), "POST", "/orders/"+testOrderID.String()+"/cancel", nil)
-	req.Header.Set(customerIDHeader, testCustomerID.String())
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 
-	cust.EXPECT().CancelOrder(mock.Anything, testCustomerID, testOrderID).Return(domain.Order{}, domain.ErrOrderNotFound)
+			rec := httptest.NewRecorder()
+			cust := NewMockCustomer(t)
+			handler := newHandler(cust, NewMockRestaurant(t))
 
-	handler.Routes().ServeHTTP(rec, req)
+			req := httptest.NewRequestWithContext(
+				context.Background(),
+				"POST",
+				"/orders/"+testOrderID.String()+"/cancel",
+				nil,
+			)
+			req.Header.Set(customerIDHeader, testCustomerID.String())
 
-	assert.Equal(t, http.StatusNotFound, rec.Code)
-}
+			cust.EXPECT().CancelOrder(mock.Anything, testOrderID).Return(tc.serviceErr)
 
-func TestCancelOrder_AccessDenied(t *testing.T) {
-	t.Parallel()
-	rec := httptest.NewRecorder()
+			handler.Routes().ServeHTTP(rec, req)
 
-	cust := NewMockCustomer(t)
-	rest := NewMockRestaurant(t)
-	handler := newHandler(cust, rest)
-
-	req := httptest.NewRequestWithContext(context.Background(), "POST", "/orders/"+testOrderID.String()+"/cancel", nil)
-	req.Header.Set(customerIDHeader, testCustomerID.String())
-
-	cust.EXPECT().CancelOrder(mock.Anything, testCustomerID, testOrderID).Return(domain.Order{}, domain.ErrOrderAccessDenied)
-
-	handler.Routes().ServeHTTP(rec, req)
-
-	assert.Equal(t, http.StatusForbidden, rec.Code)
-}
-
-func TestCancelOrder_InvalidTransition(t *testing.T) {
-	t.Parallel()
-	rec := httptest.NewRecorder()
-
-	cust := NewMockCustomer(t)
-	rest := NewMockRestaurant(t)
-	handler := newHandler(cust, rest)
-
-	req := httptest.NewRequestWithContext(context.Background(), "POST", "/orders/"+testOrderID.String()+"/cancel", nil)
-	req.Header.Set(customerIDHeader, testCustomerID.String())
-
-	cust.EXPECT().CancelOrder(mock.Anything, testCustomerID, testOrderID).Return(domain.Order{}, domain.ErrInvalidOrderTransition)
-
-	handler.Routes().ServeHTTP(rec, req)
-
-	assert.Equal(t, http.StatusConflict, rec.Code)
+			assert.Equal(t, tc.wantStatus, rec.Code)
+		})
+	}
 }
 
 func TestCancelOrder_Success(t *testing.T) {
@@ -107,36 +90,9 @@ func TestCancelOrder_Success(t *testing.T) {
 	req := httptest.NewRequestWithContext(context.Background(), "POST", "/orders/"+testOrderID.String()+"/cancel", nil)
 	req.Header.Set(customerIDHeader, testCustomerID.String())
 
-	cust.EXPECT().CancelOrder(mock.Anything, testCustomerID, testOrderID).Return(domain.Order{
-		ID:           testOrderID,
-		CustomerID:   testCustomerID,
-		RestaurantID: testRestaurantID,
-		Status:       domain.Cancelled,
-		Items: []domain.OrderItem{
-			{
-				MenuItemID:     testMenuItemID,
-				Name:           "Test Item",
-				UnitPriceMinor: 100,
-				Quantity:       1,
-				Instructions:   "",
-			},
-		},
-		SubtotalMinor: 100,
-		Currency:      "USD",
-	}, nil)
+	cust.EXPECT().CancelOrder(mock.Anything, testOrderID).Return(nil)
 
 	handler.Routes().ServeHTTP(rec, req)
 
-	assert.Equal(t, http.StatusOK, rec.Code)
-	resp := decodeOrder(t, rec)
-	assert.Equal(t, testOrderID.String(), resp.ID)
-	assert.Equal(t, testCustomerID.String(), resp.CustomerID)
-	assert.Equal(t, testRestaurantID.String(), resp.RestaurantID)
-	assert.Equal(t, string(domain.Cancelled), resp.Status)
-	assert.Len(t, resp.Items, 1)
-	assert.Equal(t, testMenuItemID.String(), resp.Items[0].MenuItemID)
-	assert.Equal(t, "Test Item", resp.Items[0].Name)
-	assert.EqualValues(t, 1, resp.Items[0].Quantity)
-	assert.EqualValues(t, 100, resp.Items[0].UnitPriceMinor)
-	assert.Equal(t, "", resp.Items[0].Instructions)
+	assert.Equal(t, http.StatusNoContent, rec.Code)
 }

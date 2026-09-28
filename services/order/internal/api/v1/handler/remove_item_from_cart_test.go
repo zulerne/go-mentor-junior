@@ -42,7 +42,6 @@ func TestRemoveItemFromCart_InvalidMenuItemID(t *testing.T) {
 	handler.Routes().ServeHTTP(rec, req)
 
 	assert.Equal(t, http.StatusBadRequest, rec.Code)
-
 }
 
 func TestRemoveItemFromCart_AbsentLine(t *testing.T) {
@@ -57,7 +56,7 @@ func TestRemoveItemFromCart_AbsentLine(t *testing.T) {
 	req := httptest.NewRequestWithContext(context.Background(), "DELETE", "/cart/items/"+testMenuItemID.String(), nil)
 	req.Header.Set(customerIDHeader, testCustomerID.String())
 
-	cust.EXPECT().RemoveItemFromCart(mock.Anything, testCustomerID, testMenuItemID).Return(domain.ErrCartNotFound)
+	cust.EXPECT().RemoveItemFromCart(mock.Anything, testCustomerID, testMenuItemID).Return(domain.ErrNotFound)
 
 	handler.Routes().ServeHTTP(rec, req)
 

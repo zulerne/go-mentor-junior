@@ -183,20 +183,29 @@ func (_c *MockOrderStore_GetAllOrders_Call) RunAndReturn(run func(ctx context.Co
 }
 
 // Update provides a mock function for the type MockOrderStore
-func (_mock *MockOrderStore) Update(ctx context.Context, order domain.Order) error {
+func (_mock *MockOrderStore) Update(ctx context.Context, order domain.Order) (domain.Order, error) {
 	ret := _mock.Called(ctx, order)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Update")
 	}
 
-	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, domain.Order) error); ok {
+	var r0 domain.Order
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, domain.Order) (domain.Order, error)); ok {
+		return returnFunc(ctx, order)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, domain.Order) domain.Order); ok {
 		r0 = returnFunc(ctx, order)
 	} else {
-		r0 = ret.Error(0)
+		r0 = ret.Get(0).(domain.Order)
 	}
-	return r0
+	if returnFunc, ok := ret.Get(1).(func(context.Context, domain.Order) error); ok {
+		r1 = returnFunc(ctx, order)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
 }
 
 // MockOrderStore_Update_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Update'
@@ -229,12 +238,12 @@ func (_c *MockOrderStore_Update_Call) Run(run func(ctx context.Context, order do
 	return _c
 }
 
-func (_c *MockOrderStore_Update_Call) Return(err error) *MockOrderStore_Update_Call {
-	_c.Call.Return(err)
+func (_c *MockOrderStore_Update_Call) Return(order1 domain.Order, err error) *MockOrderStore_Update_Call {
+	_c.Call.Return(order1, err)
 	return _c
 }
 
-func (_c *MockOrderStore_Update_Call) RunAndReturn(run func(ctx context.Context, order domain.Order) error) *MockOrderStore_Update_Call {
+func (_c *MockOrderStore_Update_Call) RunAndReturn(run func(ctx context.Context, order domain.Order) (domain.Order, error)) *MockOrderStore_Update_Call {
 	_c.Call.Return(run)
 	return _c
 }

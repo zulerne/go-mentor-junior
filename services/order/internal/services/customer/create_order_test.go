@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 	"github.com/zulerne/go-mentor-junior/order/internal/domain"
 )
 
@@ -25,7 +26,6 @@ func TestCreateOrder_EmptyCart(t *testing.T) {
 		Currency:      "USD",
 	}, nil)
 
-	// rest.EXPECT().Find(mock.Anything, testRestaurantID).Return(domain.Restaurant{
 	// 	ID:                testRestaurantID,
 	// 	Name:              "restaurant",
 	// 	AcceptingOrders:   false,
@@ -33,7 +33,6 @@ func TestCreateOrder_EmptyCart(t *testing.T) {
 	// 	Currency:          "USD",
 	// }, nil)
 
-	// rest.EXPECT().FindItem(mock.Anything, testRestaurantID, testMenuItemID).Return(domain.MenuItem{
 	// 	ID:         testMenuItemID,
 	// 	Name:       "item",
 	// 	Available:  true,
@@ -41,12 +40,9 @@ func TestCreateOrder_EmptyCart(t *testing.T) {
 	// 	Currency:   "USD",
 	// }, nil)
 
-	// oStore.EXPECT().Update(mock.Anything, mock.Anything).Return(nil)
-	// cStore.EXPECT().Update(mock.Anything, mock.Anything, domain.Cart{}).Return(nil)
-
 	_, err := service.CreateOrder(context.Background(), testCustomerID, "address")
 
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Equal(t, domain.ErrCartEmpty, err)
 }
 
@@ -74,9 +70,8 @@ func TestCreateOrder_RestaurantNotFound(t *testing.T) {
 		Currency:      "USD",
 	}, nil)
 
-	rest.EXPECT().Find(mock.Anything, testRestaurantID).Return(domain.Restaurant{}, domain.ErrRestaurantNotFound)
+	rest.EXPECT().Find(mock.Anything, testRestaurantID).Return(domain.Restaurant{}, domain.ErrNotFound)
 
-	// rest.EXPECT().FindItem(mock.Anything, testRestaurantID, testMenuItemID).Return(domain.MenuItem{
 	// 	ID:         testMenuItemID,
 	// 	Name:       "item",
 	// 	Available:  true,
@@ -84,13 +79,10 @@ func TestCreateOrder_RestaurantNotFound(t *testing.T) {
 	// 	Currency:   "USD",
 	// }, nil)
 
-	// oStore.EXPECT().Update(mock.Anything, mock.Anything).Return(nil)
-	// cStore.EXPECT().Update(mock.Anything, mock.Anything, domain.Cart{}).Return(nil)
-
 	_, err := service.CreateOrder(context.Background(), testCustomerID, "address")
 
-	assert.Error(t, err)
-	assert.Equal(t, domain.ErrRestaurantNotFound, err)
+	require.Error(t, err)
+	assert.Equal(t, domain.ErrNotFound, err)
 }
 
 func TestCreateOrder_RestaurantNotAcceptingOrders(t *testing.T) {
@@ -125,7 +117,6 @@ func TestCreateOrder_RestaurantNotAcceptingOrders(t *testing.T) {
 		Currency:          "USD",
 	}, nil)
 
-	// rest.EXPECT().FindItem(mock.Anything, testRestaurantID, testMenuItemID).Return(domain.MenuItem{
 	// 	ID:         testMenuItemID,
 	// 	Name:       "item",
 	// 	Available:  true,
@@ -133,12 +124,9 @@ func TestCreateOrder_RestaurantNotAcceptingOrders(t *testing.T) {
 	// 	Currency:   "USD",
 	// }, nil)
 
-	// oStore.EXPECT().Update(mock.Anything, mock.Anything).Return(nil)
-	// cStore.EXPECT().Update(mock.Anything, mock.Anything, domain.Cart{}).Return(nil)
-
 	_, err := service.CreateOrder(context.Background(), testCustomerID, "address")
 
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Equal(t, domain.ErrRestaurantNotAcceptingOrders, err)
 }
 
@@ -182,12 +170,9 @@ func TestCreateOrder_ItemNotAvailable(t *testing.T) {
 		Currency:   "USD",
 	}, nil)
 
-	// oStore.EXPECT().Update(mock.Anything, mock.Anything).Return(nil)
-	// cStore.EXPECT().Update(mock.Anything, mock.Anything, domain.Cart{}).Return(nil)
-
 	_, err := service.CreateOrder(context.Background(), testCustomerID, "address")
 
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Equal(t, domain.ErrMenuItemNotAvailable, err)
 }
 
@@ -231,12 +216,9 @@ func TestCreateOrder_MinimumOrderNotReached(t *testing.T) {
 		Currency:   "USD",
 	}, nil)
 
-	// oStore.EXPECT().Update(mock.Anything, mock.Anything).Return(nil)
-	// cStore.EXPECT().Update(mock.Anything, mock.Anything, domain.Cart{}).Return(nil)
-
 	_, err := service.CreateOrder(context.Background(), testCustomerID, "address")
 
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Equal(t, domain.ErrMinOrderNotReached, err)
 }
 
@@ -280,12 +262,12 @@ func TestCreateOrder_ClearsCartOnSuccess(t *testing.T) {
 		Currency:   "USD",
 	}, nil)
 
-	oStore.EXPECT().Update(mock.Anything, mock.Anything).Return(nil)
+	oStore.EXPECT().Update(mock.Anything, mock.Anything).Return(domain.Order{Status: domain.Pending}, nil)
 	cStore.EXPECT().Update(mock.Anything, mock.Anything, domain.Cart{}).Return(nil)
 
 	order, err := service.CreateOrder(context.Background(), testCustomerID, "address")
 
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, domain.Pending, order.Status)
 }
 
@@ -329,19 +311,39 @@ func TestCreateOrder_SnapshotsPrices(t *testing.T) {
 		Currency:   "USD",
 	}, nil)
 
-	oStore.EXPECT().Update(mock.Anything, mock.Anything).Return(nil)
+	oStore.EXPECT().Update(mock.Anything, mock.Anything).Return(domain.Order{
+		ID:           fixedOrderID,
+		CustomerID:   testCustomerID,
+		RestaurantID: testRestaurantID,
+		Status:       domain.Pending,
+		Items: []domain.OrderItem{
+			{MenuItemID: testMenuItemID, Name: "item", UnitPriceMinor: 200, Quantity: 1},
+		},
+		SubtotalMinor:   200,
+		Currency:        "USD",
+		DeliveryAddress: "address",
+		CreatedAt:       fixedNow,
+		UpdatedAt:       fixedNow,
+	}, nil)
 	cStore.EXPECT().Update(mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
 	order, err := service.CreateOrder(context.Background(), testCustomerID, "address")
 
-	assert.NoError(t, err)
-	assert.Equal(t, domain.Pending, order.Status)
-	assert.Equal(t, testCustomerID, order.CustomerID)
-	assert.Equal(t, testRestaurantID, order.RestaurantID)
-	assert.Equal(t, 1, len(order.Items))
-	assert.Equal(t, int64(200), order.SubtotalMinor)
-	assert.Equal(t, testMenuItemID, order.Items[0].MenuItemID)
-	assert.Equal(t, "item", order.Items[0].Name)
+	require.NoError(t, err)
+	assert.Equal(t, domain.Order{
+		ID:           fixedOrderID,
+		CustomerID:   testCustomerID,
+		RestaurantID: testRestaurantID,
+		Status:       domain.Pending,
+		Items: []domain.OrderItem{
+			{MenuItemID: testMenuItemID, Name: "item", UnitPriceMinor: 200, Quantity: 1},
+		},
+		SubtotalMinor:   200,
+		Currency:        "USD",
+		DeliveryAddress: "address",
+		CreatedAt:       fixedNow,
+		UpdatedAt:       fixedNow,
+	}, order)
 }
 
 func TestCreateOrder_Success(t *testing.T) {
@@ -384,17 +386,37 @@ func TestCreateOrder_Success(t *testing.T) {
 		Currency:   "USD",
 	}, nil)
 
-	oStore.EXPECT().Update(mock.Anything, mock.Anything).Return(nil)
+	oStore.EXPECT().Update(mock.Anything, mock.Anything).Return(domain.Order{
+		ID:           fixedOrderID,
+		CustomerID:   testCustomerID,
+		RestaurantID: testRestaurantID,
+		Status:       domain.Pending,
+		Items: []domain.OrderItem{
+			{MenuItemID: testMenuItemID, Name: "item", UnitPriceMinor: 100, Quantity: 1},
+		},
+		SubtotalMinor:   100,
+		Currency:        "USD",
+		DeliveryAddress: "address",
+		CreatedAt:       fixedNow,
+		UpdatedAt:       fixedNow,
+	}, nil)
 	cStore.EXPECT().Update(mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
 	order, err := service.CreateOrder(context.Background(), testCustomerID, "address")
 
-	assert.NoError(t, err)
-	assert.Equal(t, domain.Pending, order.Status)
-	assert.Equal(t, testCustomerID, order.CustomerID)
-	assert.Equal(t, testRestaurantID, order.RestaurantID)
-	assert.Equal(t, 1, len(order.Items))
-	assert.Equal(t, int64(100), order.SubtotalMinor)
-	assert.Equal(t, testMenuItemID, order.Items[0].MenuItemID)
-	assert.Equal(t, "item", order.Items[0].Name)
+	require.NoError(t, err)
+	assert.Equal(t, domain.Order{
+		ID:           fixedOrderID,
+		CustomerID:   testCustomerID,
+		RestaurantID: testRestaurantID,
+		Status:       domain.Pending,
+		Items: []domain.OrderItem{
+			{MenuItemID: testMenuItemID, Name: "item", UnitPriceMinor: 100, Quantity: 1},
+		},
+		SubtotalMinor:   100,
+		Currency:        "USD",
+		DeliveryAddress: "address",
+		CreatedAt:       fixedNow,
+		UpdatedAt:       fixedNow,
+	}, order)
 }

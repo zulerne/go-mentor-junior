@@ -49,8 +49,8 @@ func (_m *MockCustomer) EXPECT() *MockCustomer_Expecter {
 }
 
 // AddItemToCart provides a mock function for the type MockCustomer
-func (_mock *MockCustomer) AddItemToCart(ctx context.Context, customerID uuid.UUID, restaurantID uuid.UUID, menuItemID uuid.UUID, quantity int32, instructions string) (domain.Cart, error) {
-	ret := _mock.Called(ctx, customerID, restaurantID, menuItemID, quantity, instructions)
+func (_mock *MockCustomer) AddItemToCart(ctx context.Context, customerID uuid.UUID, restaurantID uuid.UUID, item domain.CartItem) (domain.Cart, error) {
+	ret := _mock.Called(ctx, customerID, restaurantID, item)
 
 	if len(ret) == 0 {
 		panic("no return value specified for AddItemToCart")
@@ -58,16 +58,16 @@ func (_mock *MockCustomer) AddItemToCart(ctx context.Context, customerID uuid.UU
 
 	var r0 domain.Cart
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, uuid.UUID, uuid.UUID, uuid.UUID, int32, string) (domain.Cart, error)); ok {
-		return returnFunc(ctx, customerID, restaurantID, menuItemID, quantity, instructions)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, uuid.UUID, uuid.UUID, domain.CartItem) (domain.Cart, error)); ok {
+		return returnFunc(ctx, customerID, restaurantID, item)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, uuid.UUID, uuid.UUID, uuid.UUID, int32, string) domain.Cart); ok {
-		r0 = returnFunc(ctx, customerID, restaurantID, menuItemID, quantity, instructions)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, uuid.UUID, uuid.UUID, domain.CartItem) domain.Cart); ok {
+		r0 = returnFunc(ctx, customerID, restaurantID, item)
 	} else {
 		r0 = ret.Get(0).(domain.Cart)
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, uuid.UUID, uuid.UUID, uuid.UUID, int32, string) error); ok {
-		r1 = returnFunc(ctx, customerID, restaurantID, menuItemID, quantity, instructions)
+	if returnFunc, ok := ret.Get(1).(func(context.Context, uuid.UUID, uuid.UUID, domain.CartItem) error); ok {
+		r1 = returnFunc(ctx, customerID, restaurantID, item)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -83,14 +83,12 @@ type MockCustomer_AddItemToCart_Call struct {
 //   - ctx context.Context
 //   - customerID uuid.UUID
 //   - restaurantID uuid.UUID
-//   - menuItemID uuid.UUID
-//   - quantity int32
-//   - instructions string
-func (_e *MockCustomer_Expecter) AddItemToCart(ctx any, customerID any, restaurantID any, menuItemID any, quantity any, instructions any) *MockCustomer_AddItemToCart_Call {
-	return &MockCustomer_AddItemToCart_Call{Call: _e.mock.On("AddItemToCart", ctx, customerID, restaurantID, menuItemID, quantity, instructions)}
+//   - item domain.CartItem
+func (_e *MockCustomer_Expecter) AddItemToCart(ctx any, customerID any, restaurantID any, item any) *MockCustomer_AddItemToCart_Call {
+	return &MockCustomer_AddItemToCart_Call{Call: _e.mock.On("AddItemToCart", ctx, customerID, restaurantID, item)}
 }
 
-func (_c *MockCustomer_AddItemToCart_Call) Run(run func(ctx context.Context, customerID uuid.UUID, restaurantID uuid.UUID, menuItemID uuid.UUID, quantity int32, instructions string)) *MockCustomer_AddItemToCart_Call {
+func (_c *MockCustomer_AddItemToCart_Call) Run(run func(ctx context.Context, customerID uuid.UUID, restaurantID uuid.UUID, item domain.CartItem)) *MockCustomer_AddItemToCart_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -104,25 +102,15 @@ func (_c *MockCustomer_AddItemToCart_Call) Run(run func(ctx context.Context, cus
 		if args[2] != nil {
 			arg2 = args[2].(uuid.UUID)
 		}
-		var arg3 uuid.UUID
+		var arg3 domain.CartItem
 		if args[3] != nil {
-			arg3 = args[3].(uuid.UUID)
-		}
-		var arg4 int32
-		if args[4] != nil {
-			arg4 = args[4].(int32)
-		}
-		var arg5 string
-		if args[5] != nil {
-			arg5 = args[5].(string)
+			arg3 = args[3].(domain.CartItem)
 		}
 		run(
 			arg0,
 			arg1,
 			arg2,
 			arg3,
-			arg4,
-			arg5,
 		)
 	})
 	return _c
@@ -133,35 +121,26 @@ func (_c *MockCustomer_AddItemToCart_Call) Return(cart domain.Cart, err error) *
 	return _c
 }
 
-func (_c *MockCustomer_AddItemToCart_Call) RunAndReturn(run func(ctx context.Context, customerID uuid.UUID, restaurantID uuid.UUID, menuItemID uuid.UUID, quantity int32, instructions string) (domain.Cart, error)) *MockCustomer_AddItemToCart_Call {
+func (_c *MockCustomer_AddItemToCart_Call) RunAndReturn(run func(ctx context.Context, customerID uuid.UUID, restaurantID uuid.UUID, item domain.CartItem) (domain.Cart, error)) *MockCustomer_AddItemToCart_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // CancelOrder provides a mock function for the type MockCustomer
-func (_mock *MockCustomer) CancelOrder(ctx context.Context, customerID uuid.UUID, orderID uuid.UUID) (domain.Order, error) {
-	ret := _mock.Called(ctx, customerID, orderID)
+func (_mock *MockCustomer) CancelOrder(ctx context.Context, orderID uuid.UUID) error {
+	ret := _mock.Called(ctx, orderID)
 
 	if len(ret) == 0 {
 		panic("no return value specified for CancelOrder")
 	}
 
-	var r0 domain.Order
-	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, uuid.UUID, uuid.UUID) (domain.Order, error)); ok {
-		return returnFunc(ctx, customerID, orderID)
-	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, uuid.UUID, uuid.UUID) domain.Order); ok {
-		r0 = returnFunc(ctx, customerID, orderID)
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, uuid.UUID) error); ok {
+		r0 = returnFunc(ctx, orderID)
 	} else {
-		r0 = ret.Get(0).(domain.Order)
+		r0 = ret.Error(0)
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, uuid.UUID, uuid.UUID) error); ok {
-		r1 = returnFunc(ctx, customerID, orderID)
-	} else {
-		r1 = ret.Error(1)
-	}
-	return r0, r1
+	return r0
 }
 
 // MockCustomer_CancelOrder_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CancelOrder'
@@ -171,13 +150,12 @@ type MockCustomer_CancelOrder_Call struct {
 
 // CancelOrder is a helper method to define mock.On call
 //   - ctx context.Context
-//   - customerID uuid.UUID
 //   - orderID uuid.UUID
-func (_e *MockCustomer_Expecter) CancelOrder(ctx any, customerID any, orderID any) *MockCustomer_CancelOrder_Call {
-	return &MockCustomer_CancelOrder_Call{Call: _e.mock.On("CancelOrder", ctx, customerID, orderID)}
+func (_e *MockCustomer_Expecter) CancelOrder(ctx any, orderID any) *MockCustomer_CancelOrder_Call {
+	return &MockCustomer_CancelOrder_Call{Call: _e.mock.On("CancelOrder", ctx, orderID)}
 }
 
-func (_c *MockCustomer_CancelOrder_Call) Run(run func(ctx context.Context, customerID uuid.UUID, orderID uuid.UUID)) *MockCustomer_CancelOrder_Call {
+func (_c *MockCustomer_CancelOrder_Call) Run(run func(ctx context.Context, orderID uuid.UUID)) *MockCustomer_CancelOrder_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -187,25 +165,20 @@ func (_c *MockCustomer_CancelOrder_Call) Run(run func(ctx context.Context, custo
 		if args[1] != nil {
 			arg1 = args[1].(uuid.UUID)
 		}
-		var arg2 uuid.UUID
-		if args[2] != nil {
-			arg2 = args[2].(uuid.UUID)
-		}
 		run(
 			arg0,
 			arg1,
-			arg2,
 		)
 	})
 	return _c
 }
 
-func (_c *MockCustomer_CancelOrder_Call) Return(order domain.Order, err error) *MockCustomer_CancelOrder_Call {
-	_c.Call.Return(order, err)
+func (_c *MockCustomer_CancelOrder_Call) Return(err error) *MockCustomer_CancelOrder_Call {
+	_c.Call.Return(err)
 	return _c
 }
 
-func (_c *MockCustomer_CancelOrder_Call) RunAndReturn(run func(ctx context.Context, customerID uuid.UUID, orderID uuid.UUID) (domain.Order, error)) *MockCustomer_CancelOrder_Call {
+func (_c *MockCustomer_CancelOrder_Call) RunAndReturn(run func(ctx context.Context, orderID uuid.UUID) error) *MockCustomer_CancelOrder_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -417,8 +390,8 @@ func (_c *MockCustomer_GetCart_Call) RunAndReturn(run func(ctx context.Context, 
 }
 
 // GetOrder provides a mock function for the type MockCustomer
-func (_mock *MockCustomer) GetOrder(ctx context.Context, customerID uuid.UUID, orderID uuid.UUID) (domain.Order, error) {
-	ret := _mock.Called(ctx, customerID, orderID)
+func (_mock *MockCustomer) GetOrder(ctx context.Context, orderID uuid.UUID) (domain.Order, error) {
+	ret := _mock.Called(ctx, orderID)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetOrder")
@@ -426,16 +399,16 @@ func (_mock *MockCustomer) GetOrder(ctx context.Context, customerID uuid.UUID, o
 
 	var r0 domain.Order
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, uuid.UUID, uuid.UUID) (domain.Order, error)); ok {
-		return returnFunc(ctx, customerID, orderID)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, uuid.UUID) (domain.Order, error)); ok {
+		return returnFunc(ctx, orderID)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, uuid.UUID, uuid.UUID) domain.Order); ok {
-		r0 = returnFunc(ctx, customerID, orderID)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, uuid.UUID) domain.Order); ok {
+		r0 = returnFunc(ctx, orderID)
 	} else {
 		r0 = ret.Get(0).(domain.Order)
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, uuid.UUID, uuid.UUID) error); ok {
-		r1 = returnFunc(ctx, customerID, orderID)
+	if returnFunc, ok := ret.Get(1).(func(context.Context, uuid.UUID) error); ok {
+		r1 = returnFunc(ctx, orderID)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -449,13 +422,12 @@ type MockCustomer_GetOrder_Call struct {
 
 // GetOrder is a helper method to define mock.On call
 //   - ctx context.Context
-//   - customerID uuid.UUID
 //   - orderID uuid.UUID
-func (_e *MockCustomer_Expecter) GetOrder(ctx any, customerID any, orderID any) *MockCustomer_GetOrder_Call {
-	return &MockCustomer_GetOrder_Call{Call: _e.mock.On("GetOrder", ctx, customerID, orderID)}
+func (_e *MockCustomer_Expecter) GetOrder(ctx any, orderID any) *MockCustomer_GetOrder_Call {
+	return &MockCustomer_GetOrder_Call{Call: _e.mock.On("GetOrder", ctx, orderID)}
 }
 
-func (_c *MockCustomer_GetOrder_Call) Run(run func(ctx context.Context, customerID uuid.UUID, orderID uuid.UUID)) *MockCustomer_GetOrder_Call {
+func (_c *MockCustomer_GetOrder_Call) Run(run func(ctx context.Context, orderID uuid.UUID)) *MockCustomer_GetOrder_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -465,14 +437,9 @@ func (_c *MockCustomer_GetOrder_Call) Run(run func(ctx context.Context, customer
 		if args[1] != nil {
 			arg1 = args[1].(uuid.UUID)
 		}
-		var arg2 uuid.UUID
-		if args[2] != nil {
-			arg2 = args[2].(uuid.UUID)
-		}
 		run(
 			arg0,
 			arg1,
-			arg2,
 		)
 	})
 	return _c
@@ -483,7 +450,7 @@ func (_c *MockCustomer_GetOrder_Call) Return(order domain.Order, err error) *Moc
 	return _c
 }
 
-func (_c *MockCustomer_GetOrder_Call) RunAndReturn(run func(ctx context.Context, customerID uuid.UUID, orderID uuid.UUID) (domain.Order, error)) *MockCustomer_GetOrder_Call {
+func (_c *MockCustomer_GetOrder_Call) RunAndReturn(run func(ctx context.Context, orderID uuid.UUID) (domain.Order, error)) *MockCustomer_GetOrder_Call {
 	_c.Call.Return(run)
 	return _c
 }

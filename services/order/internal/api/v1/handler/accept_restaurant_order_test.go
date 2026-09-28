@@ -6,79 +6,74 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"time"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/zulerne/go-mentor-junior/order/internal/api/v1/handler"
 	"github.com/zulerne/go-mentor-junior/order/internal/domain"
 )
 
 func TestAcceptRestaurantOrder_MissingRestaurantID(t *testing.T) {
 	t.Parallel()
-
+	rec := httptest.NewRecorder()
+	hand := newHandler(NewMockCustomer(t), NewMockRestaurant(t))
+	req := httptest.NewRequestWithContext(context.Background(), "POST",
+		"/restaurant/orders/"+testOrderID.String()+"/accept", nil)
+	hand.Routes().ServeHTTP(rec, req)
+	assert.Equal(t, http.StatusBadRequest, rec.Code)
 }
 
 func TestAcceptRestaurantOrder_InvalidOrderID(t *testing.T) {
 	t.Parallel()
-}
-
-func TestAcceptRestaurantOrder_NotFound(t *testing.T) {
-	t.Parallel()
-}
-
-func TestAcceptRestaurantOrder_AccessDenied(t *testing.T) {
-	t.Parallel()
-
 	rec := httptest.NewRecorder()
-
-	cust := NewMockCustomer(t)
-	rest := NewMockRestaurant(t)
-	hand := newHandler(cust, rest)
-
-	req := httptest.NewRequestWithContext(context.Background(), "POST", "/restaurant/orders/"+testOrderID.String()+"/accept", nil)
+	hand := newHandler(NewMockCustomer(t), NewMockRestaurant(t))
+	req := httptest.NewRequestWithContext(context.Background(), "POST",
+		"/restaurant/orders/invalid/accept", nil)
 	req.Header.Set(restaurantIDHeader, testRestaurantID.String())
-
-	rest.EXPECT().AcceptOrder(mock.Anything, testRestaurantID, testOrderID).Return(domain.Order{}, domain.ErrOrderAccessDenied)
-
 	hand.Routes().ServeHTTP(rec, req)
-
-	assert.Equal(t, http.StatusForbidden, rec.Code)
+	assert.Equal(t, http.StatusBadRequest, rec.Code)
 }
 
-func TestAcceptRestaurantOrder_InvalidTransition(t *testing.T) {
+func TestAcceptRestaurantOrder_ServiceErrors(t *testing.T) {
 	t.Parallel()
 
-	rec := httptest.NewRecorder()
+	tests := []struct {
+		name       string
+		serviceErr error
+		wantStatus int
+	}{
+		{"not found", domain.ErrNotFound, http.StatusNotFound},
+		{"access denied", domain.ErrOrderAccessDenied, http.StatusForbidden},
+		{"invalid transition", domain.ErrInvalidOrderTransition, http.StatusConflict},
+		{"delivery failed", domain.ErrDeliveryProvider, http.StatusServiceUnavailable},
+	}
 
-	cust := NewMockCustomer(t)
-	rest := NewMockRestaurant(t)
-	hand := newHandler(cust, rest)
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 
-	req := httptest.NewRequestWithContext(context.Background(), "POST", "/restaurant/orders/"+testOrderID.String()+"/accept", nil)
-	req.Header.Set(restaurantIDHeader, testRestaurantID.String())
+			rec := httptest.NewRecorder()
+			rest := NewMockRestaurant(t)
+			hand := newHandler(NewMockCustomer(t), rest)
 
-	rest.EXPECT().AcceptOrder(mock.Anything, testRestaurantID, testOrderID).Return(domain.Order{}, domain.ErrInvalidOrderTransition)
+			req := httptest.NewRequestWithContext(
+				context.Background(),
+				"POST",
+				"/restaurant/orders/"+testOrderID.String()+"/accept",
+				nil,
+			)
+			req.Header.Set(restaurantIDHeader, testRestaurantID.String())
 
-	hand.Routes().ServeHTTP(rec, req)
+			rest.EXPECT().
+				AcceptOrder(mock.Anything, testRestaurantID, testOrderID).
+				Return(domain.Order{}, tc.serviceErr)
 
-	assert.Equal(t, http.StatusConflict, rec.Code)
-}
+			hand.Routes().ServeHTTP(rec, req)
 
-func TestAcceptRestaurantOrder_DeliveryFailed(t *testing.T) {
-	t.Parallel()
-
-	rec := httptest.NewRecorder()
-
-	cust := NewMockCustomer(t)
-	rest := NewMockRestaurant(t)
-	hand := newHandler(cust, rest)
-
-	req := httptest.NewRequestWithContext(context.Background(), "POST", "/restaurant/orders/"+testOrderID.String()+"/accept", nil)
-	req.Header.Set(restaurantIDHeader, testRestaurantID.String())
-
-	rest.EXPECT().AcceptOrder(mock.Anything, testRestaurantID, testOrderID).Return(domain.Order{}, domain.ErrDeliveryProvider)
-
-	hand.Routes().ServeHTTP(rec, req)
-
-	assert.Equal(t, http.StatusServiceUnavailable, rec.Code)
+			assert.Equal(t, tc.wantStatus, rec.Code)
+		})
+	}
 }
 
 func TestAcceptRestaurantOrder_Success(t *testing.T) {
@@ -90,7 +85,12 @@ func TestAcceptRestaurantOrder_Success(t *testing.T) {
 	rest := NewMockRestaurant(t)
 	hand := newHandler(cust, rest)
 
-	req := httptest.NewRequestWithContext(context.Background(), "POST", "/restaurant/orders/"+testOrderID.String()+"/accept", nil)
+	req := httptest.NewRequestWithContext(
+		context.Background(),
+		"POST",
+		"/restaurant/orders/"+testOrderID.String()+"/accept",
+		nil,
+	)
 	req.Header.Set(restaurantIDHeader, testRestaurantID.String())
 
 	rest.EXPECT().AcceptOrder(mock.Anything, testRestaurantID, testOrderID).Return(domain.Order{
@@ -114,15 +114,24 @@ func TestAcceptRestaurantOrder_Success(t *testing.T) {
 	hand.Routes().ServeHTTP(rec, req)
 
 	assert.Equal(t, http.StatusOK, rec.Code)
-	resp := decodeOrder(t, rec)
-	assert.Equal(t, testOrderID.String(), resp.ID)
-	assert.Equal(t, testCustomerID.String(), resp.CustomerID)
-	assert.Equal(t, testRestaurantID.String(), resp.RestaurantID)
-	assert.Equal(t, string(domain.Accepted), resp.Status)
-	assert.Len(t, resp.Items, 1)
-	assert.Equal(t, testMenuItemID.String(), resp.Items[0].MenuItemID)
-	assert.Equal(t, "Test Item", resp.Items[0].Name)
-	assert.EqualValues(t, 1, resp.Items[0].Quantity)
-	assert.EqualValues(t, 100, resp.Items[0].UnitPriceMinor)
-	assert.Equal(t, "", resp.Items[0].Instructions)
+	assert.Equal(t, handler.OrderResponse{
+		ID:           testOrderID,
+		CustomerID:   testCustomerID,
+		RestaurantID: testRestaurantID,
+		Status:       string(domain.Accepted),
+		Items: []handler.OrderItem{{
+			MenuItemID:     testMenuItemID,
+			Name:           "Test Item",
+			UnitPriceMinor: 100,
+			Quantity:       1,
+			Instructions:   "",
+		}},
+		SubtotalMinor:   100,
+		Currency:        "USD",
+		DeliveryAddress: "",
+		RejectionReason: "",
+		DeliveryStatus:  "",
+		CreatedAt:       time.Time{}.UTC(),
+		UpdatedAt:       time.Time{}.UTC(),
+	}, decodeOrder(t, rec))
 }

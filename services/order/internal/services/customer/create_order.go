@@ -2,7 +2,6 @@ package customer
 
 import (
 	"context"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/zulerne/go-mentor-junior/order/internal/domain"
@@ -54,10 +53,10 @@ func (s *Service) CreateOrder(ctx context.Context, customerID uuid.UUID, deliver
 		})
 	}
 
-	now := time.Now()
+	now := s.now()
 
 	order := domain.Order{
-		ID:              uuid.New(),
+		ID:              s.newID(),
 		CustomerID:      customerID,
 		RestaurantID:    cart.RestaurantID,
 		Status:          domain.Pending,
@@ -68,10 +67,9 @@ func (s *Service) CreateOrder(ctx context.Context, customerID uuid.UUID, deliver
 		RejectionReason: "",
 		DeliveryStatus:  domain.UnspecifiedOrderDeliveryStatus,
 		CreatedAt:       now,
-		UpdatedAt:       now,
 	}
 
-	err = s.orderStore.Update(ctx, order)
+	order, err = s.orderStore.Update(ctx, order)
 	if err != nil {
 		return domain.Order{}, err
 	}

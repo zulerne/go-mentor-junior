@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	mock "github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 	"github.com/zulerne/go-mentor-junior/order/internal/domain"
 )
 
@@ -18,15 +19,12 @@ func TestAcceptOrder_NotFound(t *testing.T) {
 
 	service := newRestaurant(oStore, delivery)
 
-	oStore.EXPECT().Find(mock.Anything, testOrderID).Return(domain.Order{}, domain.ErrOrderNotFound)
-
-	// delivery.EXPECT().Create(mock.Anything, testOrderID).Return(domain.ErrDeliveryProvider)
-	// oStore.EXPECT().Update(mock.Anything, mock.Anything).Return(nil)
+	oStore.EXPECT().Find(mock.Anything, testOrderID).Return(domain.Order{}, domain.ErrNotFound)
 
 	_, err := service.AcceptOrder(context.Background(), testRestaurantID, testOrderID)
 
-	assert.Error(t, err)
-	assert.Equal(t, domain.ErrOrderNotFound, err)
+	require.Error(t, err)
+	assert.Equal(t, domain.ErrNotFound, err)
 }
 
 func TestAcceptOrder_AccessDenied(t *testing.T) {
@@ -54,12 +52,9 @@ func TestAcceptOrder_AccessDenied(t *testing.T) {
 		Currency:      "USD",
 	}, nil)
 
-	// delivery.EXPECT().Create(mock.Anything, testOrderID).Return(domain.ErrDeliveryProvider)
-	// oStore.EXPECT().Update(mock.Anything, mock.Anything).Return(nil)
-
 	_, err := service.AcceptOrder(context.Background(), testRestaurantID, testOrderID)
 
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Equal(t, domain.ErrOrderAccessDenied, err)
 }
 
@@ -88,12 +83,9 @@ func TestAcceptOrder_AlreadyAccepted(t *testing.T) {
 		Currency:      "USD",
 	}, nil)
 
-	// delivery.EXPECT().Create(mock.Anything, testOrderID).Return(domain.ErrDeliveryProvider)
-	// oStore.EXPECT().Update(mock.Anything, mock.Anything).Return(nil)
-
 	_, err := service.AcceptOrder(context.Background(), testRestaurantID, testOrderID)
 
-	assert.NoError(t, err)
+	require.NoError(t, err)
 }
 
 func TestAcceptOrder_InvalidTransition(t *testing.T) {
@@ -121,12 +113,9 @@ func TestAcceptOrder_InvalidTransition(t *testing.T) {
 		Currency:      "USD",
 	}, nil)
 
-	// delivery.EXPECT().Create(mock.Anything, testOrderID).Return(domain.ErrDeliveryProvider)
-	// oStore.EXPECT().Update(mock.Anything, mock.Anything).Return(nil)
-
 	_, err := service.AcceptOrder(context.Background(), testRestaurantID, testOrderID)
 
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Equal(t, domain.ErrInvalidOrderTransition, err)
 }
 
@@ -156,11 +145,10 @@ func TestAcceptOrder_DeliveryCreationFails(t *testing.T) {
 	}, nil)
 
 	delivery.EXPECT().Create(mock.Anything, testOrderID).Return(domain.ErrDeliveryProvider)
-	// oStore.EXPECT().Update(mock.Anything, mock.Anything).Return(nil)
 
 	_, err := service.AcceptOrder(context.Background(), testRestaurantID, testOrderID)
 
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Equal(t, domain.ErrDeliveryProvider, err)
 }
 
@@ -190,12 +178,40 @@ func TestAcceptOrder_Success(t *testing.T) {
 	}, nil)
 
 	delivery.EXPECT().Create(mock.Anything, testOrderID).Return(nil)
-	oStore.EXPECT().Update(mock.Anything, mock.Anything).Return(nil)
+	oStore.EXPECT().Update(mock.Anything, mock.Anything).Return(domain.Order{
+		ID:             testOrderID,
+		RestaurantID:   testRestaurantID,
+		CustomerID:     testCustomerID,
+		Status:         domain.Accepted,
+		DeliveryStatus: domain.WaitingForPreparation,
+		Items: []domain.OrderItem{{
+			MenuItemID:     testMenuItemID,
+			Name:           "item",
+			UnitPriceMinor: 100,
+			Quantity:       1,
+		}},
+		SubtotalMinor: 100,
+		Currency:      "USD",
+		UpdatedAt:     fixedNow,
+	}, nil)
 
 	order, err := service.AcceptOrder(context.Background(), testRestaurantID, testOrderID)
 
-	assert.NoError(t, err)
-	assert.Equal(t, domain.Accepted, order.Status)
-	assert.Equal(t, testCustomerID, order.CustomerID)
-	assert.Equal(t, testRestaurantID, order.RestaurantID)
+	require.NoError(t, err)
+	assert.Equal(t, domain.Order{
+		ID:             testOrderID,
+		RestaurantID:   testRestaurantID,
+		CustomerID:     testCustomerID,
+		Status:         domain.Accepted,
+		DeliveryStatus: domain.WaitingForPreparation,
+		Items: []domain.OrderItem{{
+			MenuItemID:     testMenuItemID,
+			Name:           "item",
+			UnitPriceMinor: 100,
+			Quantity:       1,
+		}},
+		SubtotalMinor: 100,
+		Currency:      "USD",
+		UpdatedAt:     fixedNow,
+	}, order)
 }

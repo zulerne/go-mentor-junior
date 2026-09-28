@@ -5,13 +5,11 @@ import (
 	"encoding/json"
 	"io"
 	"log/slog"
-	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
-	"github.com/zulerne/go-mentor-junior/order/internal/api/middleware"
 	"github.com/zulerne/go-mentor-junior/order/internal/api/v1/handler"
 )
 
@@ -28,20 +26,8 @@ var (
 )
 
 func newHandler(cust handler.Customer, rest handler.Restaurant) *handler.Handler {
-	log := slog.New(slog.NewTextHandler(io.Discard, nil))
+	log := slog.New(slog.DiscardHandler)
 	return handler.New(cust, rest, validator.New(), log)
-}
-
-func newCustomerRequest(method, target string, body io.Reader) *http.Request {
-	r := httptest.NewRequest(method, target, body)
-	r = r.WithContext(middleware.WithCustomerID(r.Context(), testCustomerID))
-	return r
-}
-
-func newRestaurantRequest(method, target string, body io.Reader) *http.Request {
-	r := httptest.NewRequest(method, target, body)
-	r = r.WithContext(middleware.WithRestaurantID(r.Context(), testRestaurantID))
-	return r
 }
 
 func decodeCart(t *testing.T, rec *httptest.ResponseRecorder) handler.CartResponse {

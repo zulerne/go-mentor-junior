@@ -18,7 +18,6 @@ type addItemToCartRequest struct {
 	Instructions string    `json:"instructions"  validate:"omitempty,max=250"`
 }
 
-//nolint:funlen
 func (h *Handler) addItemToCart(w http.ResponseWriter, r *http.Request) {
 	op := "handler.addItemToCart"
 	requestID, _ := middleware.RequestIDFromContext(r.Context())
@@ -37,10 +36,9 @@ func (h *Handler) addItemToCart(w http.ResponseWriter, r *http.Request) {
 		common.RespondJSON(log, w, http.StatusBadRequest, common.NewBaseError(msg))
 		return
 	}
-	log = log.With("order_id", menuItemID)
+	log = log.With("menu_item_id", menuItemID)
 
 	var req addItemToCartRequest
-	// TODO: common decoder?
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()
 	err = decoder.Decode(&req)
@@ -93,9 +91,11 @@ func (h *Handler) addItemToCart(w http.ResponseWriter, r *http.Request) {
 		r.Context(),
 		customerID,
 		req.RestaurantID,
-		menuItemID,
-		req.Quantity,
-		req.Instructions,
+		domain.CartItem{
+			MenuItemID:   menuItemID,
+			Quantity:     req.Quantity,
+			Instructions: req.Instructions,
+		},
 	)
 	if err != nil {
 		switch {
@@ -106,7 +106,7 @@ func (h *Handler) addItemToCart(w http.ResponseWriter, r *http.Request) {
 				http.StatusUnprocessableEntity,
 				common.NewError(common.CartLimitExceededErrorCode, "invalid quantity", nil),
 			)
-		case errors.Is(err, domain.ErrOrderAccessDenied):
+		case errors.Is(err, domain.ErrNotFound):
 			common.RespondJSON(
 				log,
 				w,
@@ -128,22 +128,5 @@ func (h *Handler) addItemToCart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cartItems := make([]CartItem, 0, len(cart.Items))
-	for _, item := range cart.Items {
-		cartItems = append(cartItems, CartItem{
-			MenuItemID:     item.MenuItemID.String(),
-			Name:           item.Name,
-			UnitPriceMinor: item.UnitPriceMinor,
-			Currency:       item.Currency,
-			Quantity:       item.Quantity,
-			Instructions:   item.Instructions,
-		})
-	}
-
-	common.RespondJSON(log, w, http.StatusOK, CartResponse{
-		RestaurantID:  cart.RestaurantID.String(),
-		Items:         cartItems,
-		SubtotalMinor: cart.SubtotalMinor,
-		Currency:      cart.Currency,
-	})
+	common.RespondJSON(log, w, http.StatusOK, cartToDTO(cart))
 }

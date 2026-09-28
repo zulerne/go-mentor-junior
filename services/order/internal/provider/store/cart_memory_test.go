@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/zulerne/go-mentor-junior/order/internal/domain"
 	"github.com/zulerne/go-mentor-junior/order/internal/provider/store"
 )
@@ -15,8 +16,8 @@ func TestMemoryCartStore_Find_NotFound(t *testing.T) {
 	t.Parallel()
 	s := store.NewMemoryCartStore()
 	_, err := s.Find(context.Background(), uuid.New())
-	assert.Error(t, err)
-	assert.Equal(t, domain.ErrCartNotFound, err)
+	require.Error(t, err)
+	assert.Equal(t, domain.ErrNotFound, err)
 }
 
 func TestMemoryCartStore_UpdateAndFind(t *testing.T) {
@@ -26,9 +27,9 @@ func TestMemoryCartStore_UpdateAndFind(t *testing.T) {
 	cart := domain.Cart{RestaurantID: uuid.New(), SubtotalMinor: 100}
 
 	err := s.Update(context.Background(), customerID, cart)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	found, err := s.Find(context.Background(), customerID)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, cart, found)
 }
 
@@ -42,10 +43,10 @@ func TestMemoryCartStore_UpdateClearsCart(t *testing.T) {
 	newCart := domain.Cart{RestaurantID: uuid.New(), SubtotalMinor: 0}
 
 	err := s.Update(context.Background(), customerID, newCart)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	found, err := s.Find(context.Background(), customerID)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, newCart, found)
 }
 
@@ -56,13 +57,12 @@ func TestMemoryCartStore_ConcurrentAccess(t *testing.T) {
 	s := store.NewMemoryCartStore()
 	customerID := uuid.New()
 
-	for i := 0; i < 100; i++ {
+	for range 100 {
 		wg.Go(func() {
 			err := s.Update(context.Background(), customerID, domain.Cart{RestaurantID: uuid.New(), SubtotalMinor: 100})
-			assert.NoError(t, err)
+			require.NoError(t, err)
 		})
 	}
 
 	wg.Wait()
-
 }

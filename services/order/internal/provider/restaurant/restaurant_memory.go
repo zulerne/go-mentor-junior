@@ -61,7 +61,7 @@ func (r *MemoryProvider) Find(_ context.Context, restaurantID uuid.UUID) (domain
 
 	restaurant, ok := r.meta[restaurantID]
 	if !ok {
-		return domain.Restaurant{}, domain.ErrRestaurantNotFound
+		return domain.Restaurant{}, domain.ErrNotFound
 	}
 	return restaurant, nil
 }
@@ -76,11 +76,11 @@ func (r *MemoryProvider) FindItem(
 
 	items, ok := r.data[restaurantID]
 	if !ok {
-		return domain.MenuItem{}, domain.ErrRestaurantNotFound
+		return domain.MenuItem{}, domain.ErrNotFound
 	}
 	item, ok := items[menuItemID]
 	if !ok {
-		return domain.MenuItem{}, domain.ErrMenuItemNotFound
+		return domain.MenuItem{}, domain.ErrNotFound
 	}
 	return item, nil
 }

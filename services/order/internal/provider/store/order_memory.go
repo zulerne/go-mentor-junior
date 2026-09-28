@@ -52,7 +52,7 @@ func (s *MemoryOrderStore) Find(_ context.Context, id uuid.UUID) (domain.Order, 
 
 	order, ok := s.data[id]
 	if !ok {
-		return domain.Order{}, domain.ErrOrderNotFound
+		return domain.Order{}, domain.ErrNotFound
 	}
 	return order, nil
 }
@@ -70,12 +70,13 @@ func (s *MemoryOrderStore) FindByRestaurant(_ context.Context, restaurantID uuid
 	return orders, nil
 }
 
-func (s *MemoryOrderStore) Update(_ context.Context, order domain.Order) error {
+func (s *MemoryOrderStore) Update(_ context.Context, order domain.Order) (domain.Order, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
+	order.UpdatedAt = time.Now().UTC()
 	s.data[order.ID] = order
-	return nil
+	return order, nil
 }
 
 func (s *MemoryOrderStore) GetAllOrders(_ context.Context, customerID uuid.UUID) ([]domain.Order, error) {

@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
-	"time"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
@@ -17,7 +16,6 @@ type rejectRestaurantOrderRequest struct {
 	Reason string `json:"reason" validate:"required"`
 }
 
-//nolint:funlen
 func (h *Handler) rejectRestaurantOrder(w http.ResponseWriter, r *http.Request) {
 	op := "handler.rejectRestaurantOrder"
 	requestID, _ := middleware.RequestIDFromContext(r.Context())
@@ -84,7 +82,7 @@ func (h *Handler) rejectRestaurantOrder(w http.ResponseWriter, r *http.Request) 
 	order, err := h.restaurant.RejectOrder(r.Context(), restaurantID, orderID, req.Reason)
 	if err != nil {
 		switch {
-		case errors.Is(err, domain.ErrOrderNotFound):
+		case errors.Is(err, domain.ErrNotFound):
 			common.RespondJSON(
 				log,
 				w,
@@ -113,29 +111,5 @@ func (h *Handler) rejectRestaurantOrder(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	orderItems := make([]OrderItem, 0, len(order.Items))
-	for _, item := range order.Items {
-		orderItems = append(orderItems, OrderItem{
-			MenuItemID:     item.MenuItemID.String(),
-			Name:           item.Name,
-			UnitPriceMinor: item.UnitPriceMinor,
-			Quantity:       item.Quantity,
-			Instructions:   item.Instructions,
-		})
-	}
-
-	common.RespondJSON(log, w, http.StatusOK, OrderResponse{
-		ID:              orderID.String(),
-		CustomerID:      order.CustomerID.String(),
-		RestaurantID:    order.RestaurantID.String(),
-		Status:          string(order.Status),
-		Items:           orderItems,
-		SubtotalMinor:   order.SubtotalMinor,
-		Currency:        order.Currency,
-		DeliveryAddress: order.DeliveryAddress,
-		RejectionReason: order.RejectionReason,
-		DeliveryStatus:  string(order.DeliveryStatus),
-		CreatedAt:       order.CreatedAt.Format(time.RFC3339),
-		UpdatedAt:       order.UpdatedAt.Format(time.RFC3339),
-	})
+	common.RespondJSON(log, w, http.StatusOK, orderToDTO(order))
 }

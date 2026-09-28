@@ -9,6 +9,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/zulerne/go-mentor-junior/order/internal/api/v1/handler"
 	"github.com/zulerne/go-mentor-junior/order/internal/domain"
 )
 
@@ -18,12 +19,12 @@ func TestAddItemToCart_MissingCustomerID(t *testing.T) {
 
 	cust := NewMockCustomer(t)
 	rest := NewMockRestaurant(t)
-	handler := newHandler(cust, rest)
+	h := newHandler(cust, rest)
 
 	body := jsonBody(t, map[string]any{})
 	req := httptest.NewRequestWithContext(context.Background(), "PUT", "/cart/items/"+testMenuItemID.String(), body)
 
-	handler.Routes().ServeHTTP(rec, req)
+	h.Routes().ServeHTTP(rec, req)
 
 	assert.Equal(t, http.StatusBadRequest, rec.Code)
 }
@@ -34,13 +35,13 @@ func TestAddItemToCart_InvalidMenuItemID(t *testing.T) {
 
 	cust := NewMockCustomer(t)
 	rest := NewMockRestaurant(t)
-	handler := newHandler(cust, rest)
+	h := newHandler(cust, rest)
 
 	body := jsonBody(t, map[string]any{})
 	req := httptest.NewRequestWithContext(context.Background(), "PUT", "/cart/items/"+"invalid", body)
 	req.Header.Set(customerIDHeader, testCustomerID.String())
 
-	handler.Routes().ServeHTTP(rec, req)
+	h.Routes().ServeHTTP(rec, req)
 
 	assert.Equal(t, http.StatusBadRequest, rec.Code)
 }
@@ -51,12 +52,17 @@ func TestAddItemToCart_InvalidBody(t *testing.T) {
 
 	cust := NewMockCustomer(t)
 	rest := NewMockRestaurant(t)
-	handler := newHandler(cust, rest)
+	h := newHandler(cust, rest)
 
-	req := httptest.NewRequestWithContext(context.Background(), "PUT", "/cart/items/"+testMenuItemID.String(), strings.NewReader("inmvalid"))
+	req := httptest.NewRequestWithContext(
+		context.Background(),
+		"PUT",
+		"/cart/items/"+testMenuItemID.String(),
+		strings.NewReader("invalid"),
+	)
 	req.Header.Set(customerIDHeader, testCustomerID.String())
 
-	handler.Routes().ServeHTTP(rec, req)
+	h.Routes().ServeHTTP(rec, req)
 
 	assert.Equal(t, http.StatusBadRequest, rec.Code)
 }
@@ -67,7 +73,7 @@ func TestAddItemToCart_ValidationError_Quantity(t *testing.T) {
 
 	cust := NewMockCustomer(t)
 	rest := NewMockRestaurant(t)
-	handler := newHandler(cust, rest)
+	h := newHandler(cust, rest)
 
 	body := jsonBody(t, map[string]any{
 		"restaurant_id": testRestaurantID,
@@ -77,7 +83,7 @@ func TestAddItemToCart_ValidationError_Quantity(t *testing.T) {
 	req := httptest.NewRequestWithContext(context.Background(), "PUT", "/cart/items/"+testMenuItemID.String(), body)
 	req.Header.Set(customerIDHeader, testCustomerID.String())
 
-	handler.Routes().ServeHTTP(rec, req)
+	h.Routes().ServeHTTP(rec, req)
 
 	assert.Equal(t, http.StatusBadRequest, rec.Code)
 }
@@ -88,7 +94,7 @@ func TestAddItemToCart_ValidationError_Instructions(t *testing.T) {
 
 	cust := NewMockCustomer(t)
 	rest := NewMockRestaurant(t)
-	handler := newHandler(cust, rest)
+	h := newHandler(cust, rest)
 
 	instructions := make([]byte, 251)
 
@@ -100,78 +106,56 @@ func TestAddItemToCart_ValidationError_Instructions(t *testing.T) {
 	req := httptest.NewRequestWithContext(context.Background(), "PUT", "/cart/items/"+testMenuItemID.String(), body)
 	req.Header.Set(customerIDHeader, testCustomerID.String())
 
-	handler.Routes().ServeHTTP(rec, req)
+	h.Routes().ServeHTTP(rec, req)
 
 	assert.Equal(t, http.StatusBadRequest, rec.Code)
 }
 
-func TestAddItemToCart_CartLimitExceeded(t *testing.T) {
+func TestAddItemToCart_ServiceErrors(t *testing.T) {
 	t.Parallel()
-	rec := httptest.NewRecorder()
 
-	cust := NewMockCustomer(t)
-	rest := NewMockRestaurant(t)
-	handler := newHandler(cust, rest)
+	tests := []struct {
+		name       string
+		serviceErr error
+		wantStatus int
+	}{
+		{"cart limit exceeded", domain.ErrCartLimit, http.StatusUnprocessableEntity},
+		{"restaurant conflict", domain.ErrNotFound, http.StatusConflict},
+		{"item not available", domain.ErrMenuItemNotAvailable, http.StatusUnprocessableEntity},
+	}
 
-	body := jsonBody(t, map[string]any{
-		"restaurant_id": testRestaurantID,
-		"quantity":      1,
-		"instructions":  "",
-	})
-	req := httptest.NewRequestWithContext(context.Background(), "PUT", "/cart/items/"+testMenuItemID.String(), body)
-	req.Header.Set(customerIDHeader, testCustomerID.String())
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 
-	cust.EXPECT().AddItemToCart(mock.Anything, testCustomerID, testRestaurantID, testMenuItemID, int32(1), "").Return(domain.Cart{}, domain.ErrCartLimit)
+			rec := httptest.NewRecorder()
+			cust := NewMockCustomer(t)
+			h := newHandler(cust, NewMockRestaurant(t))
 
-	handler.Routes().ServeHTTP(rec, req)
+			body := jsonBody(t, map[string]any{
+				"restaurant_id": testRestaurantID,
+				"quantity":      1,
+				"instructions":  "",
+			})
+			req := httptest.NewRequestWithContext(
+				context.Background(),
+				"PUT",
+				"/cart/items/"+testMenuItemID.String(),
+				body,
+			)
+			req.Header.Set(customerIDHeader, testCustomerID.String())
 
-	assert.Equal(t, http.StatusUnprocessableEntity, rec.Code)
-}
+			cust.EXPECT().AddItemToCart(mock.Anything, testCustomerID, testRestaurantID, domain.CartItem{
+				MenuItemID:   testMenuItemID,
+				Quantity:     1,
+				Instructions: "",
+			}).Return(domain.Cart{}, tc.serviceErr)
 
-func TestAddItemToCart_RestaurantConflict(t *testing.T) {
-	t.Parallel()
-	rec := httptest.NewRecorder()
+			h.Routes().ServeHTTP(rec, req)
 
-	cust := NewMockCustomer(t)
-	rest := NewMockRestaurant(t)
-	handler := newHandler(cust, rest)
-
-	body := jsonBody(t, map[string]any{
-		"restaurant_id": testRestaurantID,
-		"quantity":      1,
-		"instructions":  "",
-	})
-	req := httptest.NewRequestWithContext(context.Background(), "PUT", "/cart/items/"+testMenuItemID.String(), body)
-	req.Header.Set(customerIDHeader, testCustomerID.String())
-
-	cust.EXPECT().AddItemToCart(mock.Anything, testCustomerID, testRestaurantID, testMenuItemID, int32(1), "").Return(domain.Cart{}, domain.ErrOrderAccessDenied)
-
-	handler.Routes().ServeHTTP(rec, req)
-
-	assert.Equal(t, http.StatusConflict, rec.Code)
-}
-
-func TestAddItemToCart_ItemNotAvailable(t *testing.T) {
-	t.Parallel()
-	rec := httptest.NewRecorder()
-
-	cust := NewMockCustomer(t)
-	rest := NewMockRestaurant(t)
-	handler := newHandler(cust, rest)
-
-	body := jsonBody(t, map[string]any{
-		"restaurant_id": testRestaurantID,
-		"quantity":      1,
-		"instructions":  "",
-	})
-	req := httptest.NewRequestWithContext(context.Background(), "PUT", "/cart/items/"+testMenuItemID.String(), body)
-	req.Header.Set(customerIDHeader, testCustomerID.String())
-
-	cust.EXPECT().AddItemToCart(mock.Anything, testCustomerID, testRestaurantID, testMenuItemID, int32(1), "").Return(domain.Cart{}, domain.ErrMenuItemNotAvailable)
-
-	handler.Routes().ServeHTTP(rec, req)
-
-	assert.Equal(t, http.StatusUnprocessableEntity, rec.Code)
+			assert.Equal(t, tc.wantStatus, rec.Code)
+		})
+	}
 }
 
 func TestAddItemToCart_Success(t *testing.T) {
@@ -180,7 +164,7 @@ func TestAddItemToCart_Success(t *testing.T) {
 
 	cust := NewMockCustomer(t)
 	rest := NewMockRestaurant(t)
-	handler := newHandler(cust, rest)
+	h := newHandler(cust, rest)
 
 	body := jsonBody(t, map[string]any{
 		"restaurant_id": testRestaurantID,
@@ -190,7 +174,11 @@ func TestAddItemToCart_Success(t *testing.T) {
 	req := httptest.NewRequestWithContext(context.Background(), "PUT", "/cart/items/"+testMenuItemID.String(), body)
 	req.Header.Set(customerIDHeader, testCustomerID.String())
 
-	cust.EXPECT().AddItemToCart(mock.Anything, testCustomerID, testRestaurantID, testMenuItemID, int32(1), "").Return(domain.Cart{
+	cust.EXPECT().AddItemToCart(mock.Anything, testCustomerID, testRestaurantID, domain.CartItem{
+		MenuItemID:   testMenuItemID,
+		Quantity:     1,
+		Instructions: "",
+	}).Return(domain.Cart{
 		RestaurantID: testRestaurantID,
 		Items: []domain.CartItem{
 			{
@@ -206,14 +194,20 @@ func TestAddItemToCart_Success(t *testing.T) {
 		Currency:      "USD",
 	}, nil)
 
-	handler.Routes().ServeHTTP(rec, req)
+	h.Routes().ServeHTTP(rec, req)
 
 	assert.Equal(t, http.StatusOK, rec.Code)
-	resp := decodeCart(t, rec)
-	assert.Equal(t, testRestaurantID.String(), resp.RestaurantID)
-	assert.Equal(t, "USD", resp.Currency)
-	assert.Len(t, resp.Items, 1)
-	assert.Equal(t, testMenuItemID.String(), resp.Items[0].MenuItemID)
-	assert.Equal(t, "Test Item", resp.Items[0].Name)
-	assert.EqualValues(t, 1, resp.Items[0].Quantity)
+	assert.Equal(t, handler.CartResponse{
+		RestaurantID: new(testRestaurantID),
+		Items: []handler.CartItem{{
+			MenuItemID:     testMenuItemID,
+			Name:           "Test Item",
+			UnitPriceMinor: 0,
+			Currency:       "USD",
+			Quantity:       1,
+			Instructions:   "",
+		}},
+		SubtotalMinor: 0,
+		Currency:      "USD",
+	}, decodeCart(t, rec))
 }

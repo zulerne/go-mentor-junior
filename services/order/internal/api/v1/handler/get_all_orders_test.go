@@ -6,8 +6,11 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"time"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/zulerne/go-mentor-junior/order/internal/api/v1/handler"
 	"github.com/zulerne/go-mentor-junior/order/internal/domain"
 )
 
@@ -46,7 +49,7 @@ func TestGetAllOrders_Empty(t *testing.T) {
 	assert.Equal(t, http.StatusOK, rec.Code)
 
 	resp := decodeAllOrders(t, rec)
-	assert.Len(t, resp.Orders, 0)
+	assert.Empty(t, resp.Orders)
 }
 
 func TestGetAllOrders_Success(t *testing.T) {
@@ -84,16 +87,26 @@ func TestGetAllOrders_Success(t *testing.T) {
 	hand.Routes().ServeHTTP(rec, req)
 
 	assert.Equal(t, http.StatusOK, rec.Code)
-
-	resp := decodeAllOrders(t, rec)
-	assert.Equal(t, testOrderID.String(), resp.Orders[0].ID)
-	assert.Equal(t, testCustomerID.String(), resp.Orders[0].CustomerID)
-	assert.Equal(t, testRestaurantID.String(), resp.Orders[0].RestaurantID)
-	assert.Equal(t, string(domain.Pending), resp.Orders[0].Status)
-	assert.Len(t, resp.Orders[0].Items, 1)
-	assert.Equal(t, testMenuItemID.String(), resp.Orders[0].Items[0].MenuItemID)
-	assert.Equal(t, "Test Item", resp.Orders[0].Items[0].Name)
-	assert.EqualValues(t, 1, resp.Orders[0].Items[0].Quantity)
-	assert.EqualValues(t, 100, resp.Orders[0].Items[0].UnitPriceMinor)
-	assert.Equal(t, "", resp.Orders[0].Items[0].Instructions)
+	assert.Equal(t, handler.AllOrdersResponse{
+		Orders: []handler.OrderResponse{{
+			ID:           testOrderID,
+			CustomerID:   testCustomerID,
+			RestaurantID: testRestaurantID,
+			Status:       string(domain.Pending),
+			Items: []handler.OrderItem{{
+				MenuItemID:     testMenuItemID,
+				Name:           "Test Item",
+				UnitPriceMinor: 100,
+				Quantity:       1,
+				Instructions:   "",
+			}},
+			SubtotalMinor:   100,
+			Currency:        "USD",
+			DeliveryAddress: "",
+			RejectionReason: "",
+			DeliveryStatus:  "",
+			CreatedAt:       time.Time{}.UTC(),
+			UpdatedAt:       time.Time{}.UTC(),
+		}},
+	}, decodeAllOrders(t, rec))
 }

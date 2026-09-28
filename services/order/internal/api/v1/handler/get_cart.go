@@ -28,7 +28,7 @@ func (h *Handler) getCart(w http.ResponseWriter, r *http.Request) {
 	)
 	if err != nil {
 		switch {
-		case errors.Is(err, domain.ErrCartNotFound):
+		case errors.Is(err, domain.ErrNotFound):
 			common.RespondJSON(
 				log,
 				w,
@@ -50,27 +50,5 @@ func (h *Handler) getCart(w http.ResponseWriter, r *http.Request) {
 
 		return
 	}
-	cartItems := make([]CartItem, 0, len(cart.Items))
-	for _, item := range cart.Items {
-		cartItems = append(cartItems, CartItem{
-			MenuItemID:     item.MenuItemID.String(),
-			Name:           item.Name,
-			UnitPriceMinor: item.UnitPriceMinor,
-			Currency:       item.Currency,
-			Quantity:       item.Quantity,
-			Instructions:   item.Instructions,
-		})
-	}
-
-	common.RespondJSON(
-		log,
-		w,
-		http.StatusOK,
-		CartResponse{
-			RestaurantID:  cart.RestaurantID.String(),
-			Items:         cartItems,
-			SubtotalMinor: cart.SubtotalMinor,
-			Currency:      cart.Currency,
-		},
-	)
+	common.RespondJSON(log, w, http.StatusOK, cartToDTO(cart))
 }
