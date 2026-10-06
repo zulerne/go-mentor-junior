@@ -89,6 +89,25 @@ task coverage
 go generate ./...
 ```
 
+## Database Migrations
+
+Install the golang-migrate CLI on macOS with `brew install golang-migrate`.
+Set `DATABASE_URL` in `.env` or export it in your shell with the connection URL
+for your PostgreSQL database. The database must already exist.
+
+```bash
+task migrate:up       # Apply all pending migrations
+task migrate:version  # Show the current schema version
+task migrate:down     # Roll back one migration
+```
+
+Create numbered SQL files manually in `migrations`, for example
+`000002_add_table.up.sql` and `000002_add_table.down.sql`.
+Fill the SQL files before applying them. Down migrations must contain
+the corresponding rollback SQL; rollback can delete data. Keep applied migration
+files unchanged and create a new migration for each subsequent schema change.
+Run migrations separately from service startup, including in production.
+
 ## Project Structure
 
 ```
