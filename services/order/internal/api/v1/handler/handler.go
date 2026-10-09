@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/http/pprof"
+	"time"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
@@ -50,17 +51,23 @@ type Restaurant interface {
 	ReadyOrder(ctx context.Context, restaurantID uuid.UUID, orderID uuid.UUID) (domain.Order, error)
 }
 
+type Database interface {
+	Ping(ctx context.Context) error
+}
+
 // Handler holds all dependencies for HTTP handlers.
 type Handler struct {
+	pool       Database
 	customer   Customer
 	restaurant Restaurant
 	validator  *validator.Validate
 	log        *slog.Logger
 }
 
-func New(cust Customer, rest Restaurant, validator *validator.Validate, log *slog.Logger) *Handler {
+func New(pool Database, cust Customer, rest Restaurant, validator *validator.Validate, log *slog.Logger) *Handler {
 	log = log.With("component", "handler")
 	h := &Handler{
+		pool:       pool,
 		customer:   cust,
 		restaurant: rest,
 		validator:  validator,
@@ -131,11 +138,21 @@ func (h *Handler) livez(w http.ResponseWriter, _ *http.Request) {
 	)
 }
 
-func (h *Handler) readyz(w http.ResponseWriter, _ *http.Request) {
+func (h *Handler) readyz(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
+	defer cancel()
+
+	status := http.StatusOK
+
+	if err := h.pool.Ping(ctx); err != nil {
+		h.log.ErrorContext(ctx, "database ping failed", "error", err)
+		status = http.StatusServiceUnavailable
+	}
+
 	common.RespondJSON(
 		h.log,
 		w,
-		http.StatusOK,
+		status,
 		nil,
 	)
 }
