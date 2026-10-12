@@ -14,7 +14,21 @@ func (s *Service) AddItemToCart(
 	restaurantID uuid.UUID,
 	data domain.CartItem,
 ) (domain.Cart, error) {
-	cart, err := s.cartStore.Find(ctx, customerID)
+	var result domain.Cart
+	err := s.withinCart(ctx, customerID, func(carts CartStore, _ OrderStore) error {
+		var updateErr error
+		result, updateErr = s.addItemToCart(ctx, customerID, restaurantID, data, carts)
+		return updateErr
+	})
+	if err != nil {
+		return domain.Cart{}, err
+	}
+	return result, nil
+}
+
+func (s *Service) addItemToCart(ctx context.Context, customerID, restaurantID uuid.UUID,
+	data domain.CartItem, carts CartStore) (domain.Cart, error) {
+	cart, err := carts.Find(ctx, customerID)
 	if err != nil {
 		if !errors.Is(err, domain.ErrNotFound) {
 			return domain.Cart{}, err
@@ -69,7 +83,7 @@ func (s *Service) AddItemToCart(
 	}
 	cart.SubtotalMinor += item.PriceMinor * int64(data.Quantity)
 
-	err = s.cartStore.Update(ctx, customerID, cart)
+	err = carts.Update(ctx, customerID, cart)
 	if err != nil {
 		return domain.Cart{}, err
 	}

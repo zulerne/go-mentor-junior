@@ -66,6 +66,15 @@ tasks:
     cmds:
       - go test -race ./...
 
+  test-integration:
+    desc: Test PostgreSQL stores in isolated schemas
+    requires:
+      vars: [TEST_DATABASE_URL]
+    env:
+      TEST_DATABASE_URL: '{{.TEST_DATABASE_URL}}'
+    cmds:
+      - go test -race -tags integration ./internal/provider/store/... ./internal/services/customer -count=1
+
   run:
     desc: Build and run the order service
     cmds:

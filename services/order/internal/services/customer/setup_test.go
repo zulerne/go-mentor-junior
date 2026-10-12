@@ -23,7 +23,7 @@ func newCustomer(
 	rest customer.RestaurantProvider,
 ) *customer.Service {
 	log := slog.New(slog.DiscardHandler)
-	return customer.New(orderStore, cartStore, rest, log,
+	return customer.New(nil, orderStore, cartStore, rest, log,
 		customer.WithNow(func() time.Time { return fixedNow }),
 		customer.WithNewID(func() uuid.UUID { return fixedOrderID }),
 	)

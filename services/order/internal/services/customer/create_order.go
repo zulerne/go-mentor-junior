@@ -8,7 +8,21 @@ import (
 )
 
 func (s *Service) CreateOrder(ctx context.Context, customerID uuid.UUID, deliveryAddress string) (domain.Order, error) {
-	cart, err := s.cartStore.Find(ctx, customerID)
+	var result domain.Order
+	err := s.withinCart(ctx, customerID, func(carts CartStore, orders OrderStore) error {
+		var createErr error
+		result, createErr = s.createOrder(ctx, customerID, deliveryAddress, carts, orders)
+		return createErr
+	})
+	if err != nil {
+		return domain.Order{}, err
+	}
+	return result, nil
+}
+
+func (s *Service) createOrder(ctx context.Context, customerID uuid.UUID, deliveryAddress string,
+	carts CartStore, orders OrderStore) (domain.Order, error) {
+	cart, err := carts.Find(ctx, customerID)
 	if err != nil {
 		return domain.Order{}, err
 	}
@@ -69,12 +83,12 @@ func (s *Service) CreateOrder(ctx context.Context, customerID uuid.UUID, deliver
 		CreatedAt:       now,
 	}
 
-	order, err = s.orderStore.Update(ctx, order)
+	order, err = orders.Update(ctx, order)
 	if err != nil {
 		return domain.Order{}, err
 	}
 
-	err = s.cartStore.Update(ctx, customerID, domain.Cart{})
+	err = carts.Update(ctx, customerID, domain.Cart{})
 	if err != nil {
 		return domain.Order{}, err
 	}

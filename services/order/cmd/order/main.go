@@ -19,7 +19,8 @@ import (
 	"github.com/zulerne/go-mentor-junior/order/internal/logger"
 	deliveryProvider "github.com/zulerne/go-mentor-junior/order/internal/provider/delivery"
 	restaurantProvider "github.com/zulerne/go-mentor-junior/order/internal/provider/restaurant"
-	store "github.com/zulerne/go-mentor-junior/order/internal/provider/store"
+	"github.com/zulerne/go-mentor-junior/order/internal/provider/store/cart"
+	"github.com/zulerne/go-mentor-junior/order/internal/provider/store/order"
 	"github.com/zulerne/go-mentor-junior/order/internal/services/customer"
 	"github.com/zulerne/go-mentor-junior/order/internal/services/restaurant"
 	"golang.org/x/sync/errgroup"
@@ -48,11 +49,11 @@ func run() error {
 	}
 	defer pool.Close()
 
-	orderStore := store.NewMemoryOrderStore()
-	cartStore := store.NewMemoryCartStore()
+	orderStore := order.New(pool)
+	cartStore := cart.New(pool)
 	restaurantProvider := restaurantProvider.NewMemoryProvider()
 
-	customer := customer.New(orderStore, cartStore, restaurantProvider, log)
+	customer := customer.New(pool, orderStore, cartStore, restaurantProvider, log)
 	restaurant := restaurant.New(orderStore, deliveryProvider.NewStubProvider(), log)
 
 	h := handler.New(pool, customer, restaurant, validate, log)
