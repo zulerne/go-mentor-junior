@@ -23,8 +23,9 @@ const (
 )
 
 type Config struct {
-	Env  string     `koanf:"env"  validate:"required,oneof=local production"`
-	HTTP HTTPConfig `koanf:"http" validate:"omitempty"`
+	Env      string         `koanf:"env"      validate:"required,oneof=local production"`
+	HTTP     HTTPConfig     `koanf:"http"     validate:"omitempty"`
+	Database DatabaseConfig `koanf:"database" validate:"required"`
 }
 
 type HTTPConfig struct {
@@ -32,6 +33,10 @@ type HTTPConfig struct {
 	Timeout         time.Duration `koanf:"timeout"`
 	IdleTimeout     time.Duration `koanf:"idletimeout"`
 	ShutdownTimeout time.Duration `koanf:"shutdowntimeout"`
+}
+
+type DatabaseConfig struct {
+	URL string `koanf:"url" validate:"required"`
 }
 
 func Load(v *validator.Validate) (*Config, error) {

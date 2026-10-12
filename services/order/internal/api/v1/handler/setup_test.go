@@ -2,6 +2,7 @@ package handler_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"io"
 	"log/slog"
@@ -27,7 +28,13 @@ var (
 
 func newHandler(cust handler.Customer, rest handler.Restaurant) *handler.Handler {
 	log := slog.New(slog.DiscardHandler)
-	return handler.New(cust, rest, validator.New(), log)
+	return handler.New(databaseStub(func(context.Context) error { return nil }), cust, rest, validator.New(), log)
+}
+
+type databaseStub func(context.Context) error
+
+func (db databaseStub) Ping(ctx context.Context) error {
+	return db(ctx)
 }
 
 func decodeCart(t *testing.T, rec *httptest.ResponseRecorder) handler.CartResponse {

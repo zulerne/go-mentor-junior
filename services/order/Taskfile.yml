@@ -66,8 +66,53 @@ tasks:
     cmds:
       - go test -race ./...
 
+  test-integration:
+    desc: Test PostgreSQL stores in isolated schemas
+    requires:
+      vars: [TEST_DATABASE_URL]
+    env:
+      TEST_DATABASE_URL: '{{.TEST_DATABASE_URL}}'
+    cmds:
+      - go test -race -tags integration ./internal/provider/store/... ./internal/services/customer -count=1
+
   run:
     desc: Build and run the order service
     cmds:
       - task: build
       - ./{{.BIN_DIR}}/order
+
+  migrate:up:
+    desc: Apply all pending database migrations
+    requires:
+      vars: [DATABASE_URL]
+    env:
+      DATABASE_URL: '{{.DATABASE_URL}}'
+    preconditions:
+      - sh: command -v migrate >/dev/null 2>&1
+        msg: Install the migrate CLI (brew install golang-migrate)
+    cmds:
+      - migrate -path migrations -database "$DATABASE_URL" up
+
+  migrate:down:
+    desc: Roll back one database migration
+    requires:
+      vars: [DATABASE_URL]
+    env:
+      DATABASE_URL: '{{.DATABASE_URL}}'
+    preconditions:
+      - sh: command -v migrate >/dev/null 2>&1
+        msg: Install the migrate CLI (brew install golang-migrate)
+    cmds:
+      - migrate -path migrations -database "$DATABASE_URL" down 1
+
+  migrate:version:
+    desc: Show the current database migration version
+    requires:
+      vars: [DATABASE_URL]
+    env:
+      DATABASE_URL: '{{.DATABASE_URL}}'
+    preconditions:
+      - sh: command -v migrate >/dev/null 2>&1
+        msg: Install the migrate CLI (brew install golang-migrate)
+    cmds:
+      - migrate -path migrations -database "$DATABASE_URL" version
